@@ -188,7 +188,7 @@ export default function SubmitPage({
           <p className="text-slate-600">
             Need help? Contact us at{" "}
             <a href="mailto:research@neomed.edu" className="text-indigo-600 hover:text-indigo-700 font-medium">
-              research@neomed.edu
+              sbadat@neomed.edu
             </a>
           </p>
         </div>

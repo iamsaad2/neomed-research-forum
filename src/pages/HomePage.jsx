@@ -3,7 +3,7 @@ import {
   Zap, ArrowRight, ChevronRight, TrendingUp,
   Database, Target, Shield,
   Stethoscope, BookOpen, FlaskConical, Globe,
-  Award, CheckCircle, AlertCircle, Send,
+  Award, CheckCircle, AlertCircle, Send, Presentation
 } from "lucide-react";
 import Stat from "../components/Stat";
 import FeatureCard from "../components/FeatureCard";
@@ -46,7 +46,7 @@ export default function HomePage() {
   // countdown
   useEffect(() => {
     const calc = () => {
-      const deadline = new Date("2026-01-01T23:59:59");
+      const deadline = new Date("2026-01-05T23:59:59");
       const now = new Date();
       const diff = deadline - now;
       if (diff > 0) {
@@ -109,7 +109,7 @@ export default function HomePage() {
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <div className="inline-flex items-center px-5 py-3 backdrop-blur-sm border rounded-full mb-6 shadow-lg" style={{backgroundColor: 'rgba(255, 255, 255, 0.15)', borderColor: 'rgba(255, 255, 255, 0.3)'}}>
-              <span className="text-sm font-semibold text-white">Submissions Open - Deadline January 1st</span>
+              <span className="text-sm font-semibold text-white">Submissions Open - Deadline January 5th</span>
             </div>
 
             <div className="mb-4">
@@ -254,10 +254,11 @@ export default function HomePage() {
             <div className="absolute left-1/2 -translate-x-1/2 w-1 h-full" style={{background: `linear-gradient(180deg, #0072BC, #004963)`}} />
             <div className="space-y-12">
               {[
-                { date: "January 15, 2025", title: "Submissions Open", status: "completed", icon: CheckCircle, description: "Abstract submission portal opens for all researchers" },
-                { date: "March 1, 2025", title: "Submission Deadline", status: "active", icon: AlertCircle, description: "Final deadline for abstract submissions - 11:59 PM EST" },
-                { date: "April 15, 2025", title: "Acceptance Notifications", status: "upcoming", icon: Send, description: "Authors notified of acceptance decisions" },
-                { date: "May 20, 2025", title: "Research Forum", status: "upcoming", icon: Award, description: "Annual NEOMED Research Forum - Full day event" },
+                { date: "November 21, 2025", title: "Submissions Open", status: "active", icon: CheckCircle, description: "Abstract submission portal opens for all researchers" },
+                { date: "January 7, 2025", title: "Submission Deadline", status: "upcoming", icon: AlertCircle, description: "Final deadline for abstract submissions - 11:59 PM EST" },
+                { date: "January 28, 2025", title: "Acceptance Notifications", status: "upcoming", icon: Send, description: "Authors notified of acceptance decisions" },
+                { date: "February 18, 2025", title: "Final Slides Due", status: "upcoming", icon: Presentation, description: "Accepted authors final slides due" },
+                { date: "February 25, 2025", title: "Research Forum", status: "upcoming", icon: Award, description: "Annual NEOMED Research Forum - Full day event" },
               ].map((item, idx) => (
                 <div key={item.title} className={`relative flex items-center ${idx % 2 === 0 ? "justify-start" : "justify-end"}`}>
                   <div className={`w-5/12 ${idx % 2 === 0 ? "text-right pr-8" : "text-left pl-8"}`}>
@@ -300,20 +301,7 @@ export default function HomePage() {
               text="Explore our comprehensive database of student and faculty research from across all three colleges"
               cta="Browse Research"
             />
-            <FeatureCard
-              icon={<Target className="w-10 h-10 mb-4" style={{color: '#004963'}} />}
-              title="Research Mentorship"
-              text="Connect with NEOMED faculty mentors to guide your research journey and advance your scholarly work"
-              cta="Find a Mentor"
-              ctaColor="text-[#004963] group-hover:text-[#0072BC]"
-            />
-            <FeatureCard
-              icon={<Shield className="w-10 h-10 mb-4" style={{color: '#62B5E5'}} />}
-              title="IRB & Research Ethics"
-              text="Navigate NEOMED's research ethics requirements and ensure compliance with institutional standards"
-              cta="View Guidelines"
-              ctaColor="text-[#62B5E5] group-hover:text-[#0072BC]"
-            />
+           
           </div>
         </div>
       </section>
