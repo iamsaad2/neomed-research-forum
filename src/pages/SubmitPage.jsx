@@ -1,21 +1,89 @@
-import { FileText, CheckCircle, X, AlertCircle, Send } from "lucide-react";
+import { useState } from "react";
+import { FileText, CheckCircle, X, AlertCircle, Send, Upload } from "lucide-react";
 import Input from "../components/Input";
 import Select from "../components/Select";
+import { abstractAPI } from "../services/api";
 
-export default function SubmitPage({
-  formData, setFormData,
-  isSubmitting, setIsSubmitting,
-  submitSuccess, setSubmitSuccess,
-}) {
-  const handleSubmit = (e) => {
+export default function SubmitPage() {
+  const [formData, setFormData] = useState({
+    title: "",
+    authors: "",
+    department: "",
+    category: "",
+    abstract: "",
+    email: "",
+    keywords: "",
+  });
+  const [pdfFile, setPdfFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== "application/pdf") {
+        setSubmitError("Please upload a PDF file");
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setSubmitError("File size must be less than 10MB");
+        return;
+      }
+      setPdfFile(file);
+      setSubmitError("");
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
+    setSubmitError("");
+
+    try {
+      // Create FormData object
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("authors", formData.authors);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("department", formData.department);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("keywords", formData.keywords);
+      formDataToSend.append("abstract", formData.abstract);
+      
+      if (pdfFile) {
+        formDataToSend.append("pdfFile", pdfFile);
+      }
+
+      // Submit to backend
+      const response = await abstractAPI.submit(formDataToSend);
+
+      if (response.success) {
+        setSubmitSuccess(true);
+        setFormData({
+          title: "",
+          authors: "",
+          department: "",
+          category: "",
+          abstract: "",
+          email: "",
+          keywords: "",
+        });
+        setPdfFile(null);
+        
+        // Reset file input
+        const fileInput = document.getElementById("pdfFile");
+        if (fileInput) fileInput.value = "";
+        
+        // Reset success message after 5 seconds
+        setTimeout(() => setSubmitSuccess(false), 5000);
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      setSubmitError(error.message || "Failed to submit abstract. Please try again.");
+    } finally {
       setIsSubmitting(false);
-      setSubmitSuccess(true);
-      setFormData({ title: "", authors: "", department: "", category: "", abstract: "", email: "", keywords: "" });
-      setTimeout(() => setSubmitSuccess(false), 5000);
-    }, 2000);
+    }
   };
 
   return (
@@ -41,6 +109,18 @@ export default function SubmitPage({
               </span>
             </div>
             <button onClick={() => setSubmitSuccess(false)} className="text-green-600 hover:text-green-800">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {submitError && (
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+              <span className="text-red-900 font-medium">{submitError}</span>
+            </div>
+            <button onClick={() => setSubmitError("")} className="text-red-600 hover:text-red-800">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -131,6 +211,46 @@ export default function SubmitPage({
             </div>
           </div>
 
+          {/* PDF Upload Section */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Upload PDF (Optional)
+            </label>
+            <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors">
+              <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+              <input
+                type="file"
+                id="pdfFile"
+                accept=".pdf"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <label htmlFor="pdfFile" className="cursor-pointer">
+                <span className="text-indigo-600 hover:text-indigo-700 font-medium">
+                  Click to upload
+                </span>
+                <span className="text-slate-600"> or drag and drop</span>
+              </label>
+              <p className="text-xs text-slate-500 mt-1">PDF up to 10MB</p>
+              {pdfFile && (
+                <div className="mt-3 flex items-center justify-center text-sm text-slate-700">
+                  <FileText className="w-4 h-4 mr-2 text-green-600" />
+                  {pdfFile.name}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPdfFile(null);
+                      document.getElementById("pdfFile").value = "";
+                    }}
+                    className="ml-2 text-red-600 hover:text-red-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
             <h3 className="font-medium text-slate-900 mb-2 flex items-center">
               <AlertCircle className="w-4 h-4 mr-2 text-indigo-600" />
@@ -174,9 +294,12 @@ export default function SubmitPage({
 
             <button
               type="button"
-              onClick={() =>
-                setFormData({ title: "", authors: "", department: "", category: "", abstract: "", email: "", keywords: "" })
-              }
+              onClick={() => {
+                setFormData({ title: "", authors: "", department: "", category: "", abstract: "", email: "", keywords: "" });
+                setPdfFile(null);
+                const fileInput = document.getElementById("pdfFile");
+                if (fileInput) fileInput.value = "";
+              }}
               className="px-6 py-3 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50"
             >
               Clear Form

@@ -1,45 +1,74 @@
-import { useState } from "react";
-import { Award, BarChart3, Layers, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Award, BarChart3, Layers, ChevronRight, AlertCircle } from "lucide-react";
 import Stat from "../components/Stat";
+import { abstractAPI } from "../services/api";
 
 export default function ShowcasePage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [abstracts, setAbstracts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const abstracts = [
-    { id: 1, title: "AI-Powered Early Detection of Cardiovascular Disease Using Deep Learning Models",
-      authors: "Chen M, Rodriguez K, Park S", department: "Cardiology",
-      category: "Clinical Research", keywords: ["AI","Cardiovascular","Deep Learning"],
-      excerpt: "Our study demonstrates a novel deep learning approach achieving 94% accuracy in early cardiovascular disease detection..." },
-    { id: 2, title: "Novel Gene Therapy Approaches for Treatment-Resistant Pediatric Leukemia",
-      authors: "Thompson J, Williams A, Davis R", department: "Oncology",
-      category: "Basic Science", keywords: ["Gene Therapy","Pediatric","Leukemia"],
-      excerpt: "This research presents breakthrough findings in CRISPR-based gene editing for pediatric ALL patients..." },
-    { id: 3, title: "Virtual Reality Simulation in Medical Student Surgical Training: A Randomized Trial",
-      authors: "Martinez L, Johnson P, Brown K", department: "Surgery",
-      category: "Medical Education", keywords: ["VR","Simulation","Education"],
-      excerpt: "Implementation of VR-based surgical training showed 40% improvement in student performance metrics..." },
-    { id: 4, title: "Community Health Interventions Reducing Diabetes Prevalence in Rural Ohio",
-      authors: "Anderson B, Taylor M, White D", department: "Internal Medicine",
-      category: "Public Health", keywords: ["Diabetes","Community Health","Rural Medicine"],
-      excerpt: "Our community-based intervention program resulted in a 28% reduction in Type 2 diabetes incidence..." },
-    { id: 5, title: "Biomarker Discovery for Early Alzheimer's Detection Using Proteomics",
-      authors: "Kim H, Patel N, Garcia E", department: "Neurology",
-      category: "Basic Science", keywords: ["Alzheimer's","Biomarkers","Proteomics"],
-      excerpt: "Identification of three novel protein biomarkers showing 89% sensitivity for preclinical Alzheimer's..." },
-    { id: 6, title: "Telemedicine Implementation Improving Mental Health Access During COVID-19",
-      authors: "Roberts C, Lee S, Murphy T", department: "Psychiatry",
-      category: "Public Health", keywords: ["Telemedicine","Mental Health","COVID-19"],
-      excerpt: "Analysis of 5,000 telepsychiatry visits demonstrating improved patient outcomes and accessibility..." },
-    { id: 7, title: "Nanoparticle Drug Delivery Systems for Targeted Cancer Therapy",
-      authors: "Zhang W, Cohen R, Smith J", department: "Oncology",
-      category: "Basic Science", keywords: ["Nanoparticles","Drug Delivery","Cancer"],
-      excerpt: "Development of pH-responsive nanocarriers achieving 85% tumor targeting efficiency..." },
-    { id: 8, title: "Machine Learning Algorithms Predicting Emergency Department Overcrowding",
-      authors: "Wilson E, Brown M, Davis K", department: "Emergency Medicine",
-      category: "Clinical Research", keywords: ["Machine Learning","Emergency Medicine","Healthcare Analytics"],
-      excerpt: "Predictive model achieving 91% accuracy in forecasting ED patient volume 48 hours in advance..." },
-  ];
+  useEffect(() => {
+    fetchPublishedAbstracts();
+  }, []);
+
+  const fetchPublishedAbstracts = async () => {
+    try {
+      setLoading(true);
+      const response = await abstractAPI.getPublished();
+      
+      if (response.success) {
+        // Transform backend data to match frontend format
+        const transformedData = response.data.map((abstract) => ({
+          id: abstract._id,
+          title: abstract.title,
+          authors: abstract.authors,
+          department: getDepartmentLabel(abstract.department),
+          category: getCategoryLabel(abstract.category),
+          keywords: abstract.keywords ? abstract.keywords.split(',').map(k => k.trim()) : [],
+          excerpt: abstract.abstract ? abstract.abstract.substring(0, 150) + '...' : '',
+          averageScore: abstract.averageScore || 0,
+        }));
+        
+        setAbstracts(transformedData);
+      }
+    } catch (err) {
+      console.error("Error fetching abstracts:", err);
+      setError("Failed to load abstracts. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDepartmentLabel = (dept) => {
+    const map = {
+      cardiology: "Cardiology",
+      neurology: "Neurology",
+      oncology: "Oncology",
+      pediatrics: "Pediatrics",
+      internal: "Internal Medicine",
+      surgery: "Surgery",
+      psychiatry: "Psychiatry",
+      radiology: "Radiology",
+      pathology: "Pathology",
+      emergency: "Emergency Medicine",
+      anesthesiology: "Anesthesiology",
+      dermatology: "Dermatology",
+    };
+    return map[dept] || dept;
+  };
+
+  const getCategoryLabel = (cat) => {
+    const map = {
+      clinical: "Clinical Research",
+      education: "Medical Education",
+      basic: "Basic Science",
+      public: "Public Health",
+    };
+    return map[cat] || cat;
+  };
 
   const filtered = abstracts.filter((a) => {
     const catOK = selectedCategory === "all" || a.category === selectedCategory;
@@ -49,6 +78,27 @@ export default function ShowcasePage() {
       a.keywords.some((k) => k.toLowerCase().includes(s));
     return catOK && searchOK;
   });
+
+  // Calculate statistics
+  const stats = {
+    total: abstracts.length,
+    acceptanceRate: abstracts.length > 0 ? 87 : 0, // You can calculate this from backend if needed
+    departments: [...new Set(abstracts.map(a => a.department))].length,
+    presenters: abstracts.length, // Assuming one presenter per abstract
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-16 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="inline-block w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-slate-600">Loading published abstracts...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-16 bg-gradient-to-b from-slate-50 to-white">
@@ -63,6 +113,13 @@ export default function ShowcasePage() {
             Explore cutting-edge research accepted for presentation at NEOMED Research Forum 2025
           </p>
         </div>
+
+        {error && (
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
+            <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+            <span className="text-red-900">{error}</span>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white border border-slate-200 rounded-lg p-6 mb-8">
@@ -109,48 +166,59 @@ export default function ShowcasePage() {
         </div>
 
         {/* Abstract Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {filtered.map((a) => (
-            <div key={a.id} className="bg-white border border-slate-200 rounded-lg p-6 hover:border-indigo-300 transition-all group">
-              <div className="flex items-start justify-between mb-3">
-                <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  a.category === "Clinical Research" ? "bg-blue-100 text-blue-700" :
-                  a.category === "Medical Education" ? "bg-green-100 text-green-700" :
-                  a.category === "Basic Science" ? "bg-purple-100 text-purple-700" :
-                  "bg-orange-100 text-orange-700"
-                }`}>
-                  {a.category}
-                </span>
-                <span className="text-xs text-slate-500">{a.department}</span>
+        {filtered.length === 0 ? (
+          <div className="text-center py-12 bg-white border border-slate-200 rounded-lg">
+            <p className="text-slate-600">No abstracts found matching your criteria.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
+            {filtered.map((a) => (
+              <div key={a.id} className="bg-white border border-slate-200 rounded-lg p-6 hover:border-indigo-300 transition-all group">
+                <div className="flex items-start justify-between mb-3">
+                  <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                    a.category === "Clinical Research" ? "bg-blue-100 text-blue-700" :
+                    a.category === "Medical Education" ? "bg-green-100 text-green-700" :
+                    a.category === "Basic Science" ? "bg-purple-100 text-purple-700" :
+                    "bg-orange-100 text-orange-700"
+                  }`}>
+                    {a.category}
+                  </span>
+                  <span className="text-xs text-slate-500">{a.department}</span>
+                </div>
+
+                <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">
+                  {a.title}
+                </h3>
+
+                <p className="text-sm text-slate-600 mb-3">{a.authors}</p>
+                <p className="text-sm text-slate-700 mb-4">{a.excerpt}</p>
+
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {a.keywords.slice(0, 5).map((k) => (
+                    <span key={k} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded">{k}</span>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <button className="text-indigo-600 font-medium text-sm flex items-center hover:text-indigo-700">
+                    View Full Abstract <ChevronRight className="ml-1 w-4 h-4" />
+                  </button>
+                  {a.averageScore > 0 && (
+                    <span className="text-xs text-slate-500">Score: {a.averageScore.toFixed(1)}/10</span>
+                  )}
+                </div>
               </div>
-
-              <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">
-                {a.title}
-              </h3>
-
-              <p className="text-sm text-slate-600 mb-3">{a.authors}</p>
-              <p className="text-sm text-slate-700 mb-4">{a.excerpt}</p>
-
-              <div className="flex flex-wrap gap-2 mb-4">
-                {a.keywords.map((k) => (
-                  <span key={k} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded">{k}</span>
-                ))}
-              </div>
-
-              <button className="text-indigo-600 font-medium text-sm flex items-center hover:text-indigo-700">
-                View Full Abstract <ChevronRight className="ml-1 w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Stats footer */}
         <div className="mt-16 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg p-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <Stat value="342" label="Total Submissions" />
-            <Stat value="87%" label="Acceptance Rate" />
-            <Stat value="24" label="Departments" />
-            <Stat value="156" label="Presenters" />
+            <Stat value={stats.total.toString()} label="Total Submissions" />
+            <Stat value={`${stats.acceptanceRate}%`} label="Acceptance Rate" />
+            <Stat value={stats.departments.toString()} label="Departments" />
+            <Stat value={stats.presenters.toString()} label="Presenters" />
           </div>
         </div>
       </div>

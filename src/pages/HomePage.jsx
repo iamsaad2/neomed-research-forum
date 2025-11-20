@@ -6,7 +6,6 @@ import {
   Award, CheckCircle, AlertCircle, Send, Presentation
 } from "lucide-react";
 import Stat from "../components/Stat";
-import FeatureCard from "../components/FeatureCard";
 
 export default function HomePage() {
   const [stats, setStats] = useState({ submissions: 0, departments: 0, presenters: 0, awards: 0 });
@@ -160,88 +159,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Department Heatmap */}
-      <section className="py-16 bg-gradient-to-b from-slate-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Research Activity Across NEOMED</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">Real-time visualization of research engagement from our medical, pharmacy, and graduate colleges</p>
-          </div>
-
-          <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
-            {departments.map((dept) => (
-              <div key={dept.name} className="relative group transform hover:scale-105 transition-all duration-200">
-                <div className={`h-24 bg-gradient-to-br ${dept.color} rounded-lg p-4 flex flex-col justify-between text-white overflow-hidden`}>
-                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity rounded-lg" />
-                  <div className="relative z-10">
-                    <div className="text-xs font-medium opacity-90">{dept.name}</div>
-                    <div className="text-2xl font-bold">{dept.submissions}</div>
-                  </div>
-                  <div className="w-full bg-white/20 h-1 rounded-full relative">
-                    <div className="absolute left-0 top-0 h-full bg-white/60 rounded-full" style={{ width: `${(dept.submissions / 51) * 100}%` }} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Research Categories */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Research Categories</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">Track submission progress across our four main research domains</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {categories.map((category, i) => (
-              <div key={category.name} className="bg-white border border-slate-200 rounded-lg p-6 hover:border-indigo-300 transition-all group">
-                <div className="flex justify-between items-start mb-4">
-                  <category.icon className="w-8 h-8 text-slate-700 group-hover:text-indigo-600 transition-colors" />
-                  <div className="relative w-16 h-16">
-                    <svg className="transform -rotate-90 w-16 h-16">
-                      <circle cx="32" cy="32" r="28" stroke="#e2e8f0" strokeWidth="4" fill="none" />
-                      <circle
-                        cx="32" cy="32" r="28" stroke={i % 2 === 0 ? "#6366f1" : "#8b5cf6"} strokeWidth="4" fill="none"
-                        strokeDasharray={`${2 * Math.PI * 28}`}
-                        strokeDashoffset={`${2 * Math.PI * 28 * (1 - category.percentage / 100)}`}
-                        className="transition-all duration-1000"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-sm font-bold text-slate-900">{category.percentage}%</span>
-                    </div>
-                  </div>
-                </div>
-                <h3 className="font-semibold text-slate-900 mb-2">{category.name}</h3>
-                <p className="text-sm text-slate-600 mb-3">{category.description}</p>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-500">{category.submissions} submissions</span>
-                  <TrendingUp className="w-4 h-4 text-green-500" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Topics Cloud */}
-      <section className="py-16 bg-gradient-to-b from-slate-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Trending Research at NEOMED</h2>
-          <p className="text-slate-600 max-w-2xl mx-auto mb-8">Discover the cutting-edge research shaping healthcare in Northeast Ohio and beyond</p>
-          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-            {researchTopics.map((t, i) => (
-              <div key={i} className={`${t.size} ${t.weight} text-slate-700 hover:text-[#0072BC] transition-all cursor-pointer transform hover:scale-110`}>
-                {t.name}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Timeline */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -287,21 +204,6 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Extras */}
-      <section className="py-16 bg-gradient-to-b from-slate-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard
-              icon={<Database className="w-10 h-10 mb-4" style={{color: '#0072BC'}} />}
-              title="NEOMED Research Archive"
-              text="Explore our comprehensive database of student and faculty research from across all three colleges"
-              cta="Browse Research"
-            />
-           
           </div>
         </div>
       </section>

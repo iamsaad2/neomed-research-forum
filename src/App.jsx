@@ -1,44 +1,43 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useState } from "react";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
-import SubmitPage from "./pages/SubmitPage";
+import MultiStepSubmitPage from "./pages/MultiStepSubmitPage";
 import ShowcasePage from "./pages/ShowcasePage";
+import ThankYouPage from "./pages/ThankYouPage";
+import ViewAbstractPage from "./pages/ViewAbstractPage";
+import ReviewerLoginPage from "./pages/ReviewerLoginPage";
+import ReviewerDashboardPage from "./pages/ReviewerDashboardPage";
+import ReviewAbstractPage from "./pages/ReviewAbstractPage";
+import BackendDiagnostic from "./components/BackendDiagnostic";
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // keep form state here so it survives navigation
-  const [formData, setFormData] = useState({
-    title: "", authors: "", department: "", category: "",
-    abstract: "", email: "", keywords: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <Navbar
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-      />
-
-      {currentPage === "home" && <HomePage />}
-
-      {currentPage === "submit" && (
-        <SubmitPage
-          formData={formData}
-          setFormData={setFormData}
-          isSubmitting={isSubmitting}
-          setIsSubmitting={setIsSubmitting}
-          submitSuccess={submitSuccess}
-          setSubmitSuccess={setSubmitSuccess}
+    <Router>
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+        <Navbar
+          mobileMenuOpen={mobileMenuOpen}
+          setMobileMenuOpen={setMobileMenuOpen}
         />
-      )}
 
-      {currentPage === "showcase" && <ShowcasePage />}
-    </div>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/submit" element={<MultiStepSubmitPage />} />
+          <Route path="/showcase" element={<ShowcasePage />} />
+          <Route path="/thank-you/:token" element={<ThankYouPage />} />
+          <Route path="/view/:token" element={<ViewAbstractPage />} />
+          
+          {/* Reviewer Routes */}
+          <Route path="/review" element={<ReviewerLoginPage />} />
+          <Route path="/reviewer/dashboard" element={<ReviewerDashboardPage />} />
+          <Route path="/reviewer/abstract/:abstractId" element={<ReviewAbstractPage />} />
+        </Routes>
+
+        {/* Backend Diagnostic Tool - Remove in production */}
+        <BackendDiagnostic />
+      </div>
+    </Router>
   );
 }
