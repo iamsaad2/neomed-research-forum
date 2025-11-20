@@ -45,7 +45,7 @@ export default function MultiStepSubmitPage() {
     { number: 6, title: "Review", description: "Confirm & Submit" },
   ];
 
-  const degrees = ["MD", "DO", "PhD", "MD/PhD", "MS", "BS","BA", "Other"];
+  const degrees = ["MD", "DO", "PhD", "MD/PhD", "MS", "BS", "Other"];
 
   // Author management
   const addAuthor = () => {
@@ -279,9 +279,9 @@ export default function MultiStepSubmitPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center px-4 py-2 bg-indigo-100 border border-indigo-200 rounded-full mb-6">
-            <FileText className="w-4 h-4 mr-2 text-indigo-600" />
-            <span className="text-sm font-medium text-indigo-900">Submit Abstract</span>
+          <div className="inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-full mb-6">
+            <FileText className="w-4 h-4 mr-2 text-[#0099CC]" />
+            <span className="text-sm font-medium text-slate-900">Submit Abstract</span>
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
             NEOMED Research Forum 2025
@@ -299,7 +299,7 @@ export default function MultiStepSubmitPage() {
                 <div
                   className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
                     currentStep >= step.number
-                      ? "bg-indigo-600 border-indigo-600 text-white"
+                      ? "bg-[#0099CC] border-[#0099CC] text-white"
                       : "bg-white border-slate-300 text-slate-400"
                   }`}
                 >
@@ -312,7 +312,7 @@ export default function MultiStepSubmitPage() {
                 {idx < steps.length - 1 && (
                   <div
                     className={`flex-1 h-1 mx-2 ${
-                      currentStep > step.number ? "bg-indigo-600" : "bg-slate-200"
+                      currentStep > step.number ? "bg-[#0099CC]" : "bg-slate-200"
                     }`}
                   />
                 )}
@@ -347,7 +347,7 @@ export default function MultiStepSubmitPage() {
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                     errors.title
                       ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-indigo-500"
+                      : "border-slate-300 focus:border-[#0099CC]"
                   }`}
                   placeholder="Enter your abstract title"
                 />
@@ -365,8 +365,8 @@ export default function MultiStepSubmitPage() {
               </div>
 
               {/* Primary Author */}
-              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-indigo-900 mb-4">Primary Author *</h3>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-4">Primary Author *</h3>
                 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
@@ -385,7 +385,7 @@ export default function MultiStepSubmitPage() {
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                         errors.primaryFirstName
                           ? "border-red-300 focus:border-red-500"
-                          : "border-slate-300 focus:border-indigo-500"
+                          : "border-slate-300 focus:border-[#0099CC]"
                       }`}
                       placeholder="John"
                     />
@@ -410,7 +410,7 @@ export default function MultiStepSubmitPage() {
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                         errors.primaryLastName
                           ? "border-red-300 focus:border-red-500"
-                          : "border-slate-300 focus:border-indigo-500"
+                          : "border-slate-300 focus:border-[#0099CC]"
                       }`}
                       placeholder="Doe"
                     />
@@ -434,7 +434,7 @@ export default function MultiStepSubmitPage() {
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none bg-white ${
                         errors.primaryDegree
                           ? "border-red-300 focus:border-red-500"
-                          : "border-slate-300 focus:border-indigo-500"
+                          : "border-slate-300 focus:border-[#0099CC]"
                       }`}
                     >
                       <option value="">Select Degree</option>
@@ -465,7 +465,7 @@ export default function MultiStepSubmitPage() {
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                         errors.primaryEmail
                           ? "border-red-300 focus:border-red-500"
-                          : "border-slate-300 focus:border-indigo-500"
+                          : "border-slate-300 focus:border-[#0099CC]"
                       }`}
                       placeholder="john.doe@neomed.edu"
                     />
@@ -483,7 +483,7 @@ export default function MultiStepSubmitPage() {
                   <button
                     type="button"
                     onClick={addAuthor}
-                    className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+                    className="flex items-center px-4 py-2 bg-[#0099CC] text-white rounded-lg hover:bg-[#0077AA] transition-colors text-sm font-medium"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Author
@@ -608,7 +608,7 @@ export default function MultiStepSubmitPage() {
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none bg-white ${
                     errors.department
                       ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-indigo-500"
+                      : "border-slate-300 focus:border-[#0099CC]"
                   }`}
                 >
                   <option value="">Select Department</option>
@@ -645,7 +645,7 @@ export default function MultiStepSubmitPage() {
                     className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                       errors.departmentOther
                         ? "border-red-300 focus:border-red-500"
-                        : "border-slate-300 focus:border-indigo-500"
+                        : "border-slate-300 focus:border-[#0099CC]"
                     }`}
                     placeholder="Enter department name"
                   />
@@ -665,7 +665,7 @@ export default function MultiStepSubmitPage() {
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none bg-white ${
                     errors.category
                       ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-indigo-500"
+                      : "border-slate-300 focus:border-[#0099CC]"
                   }`}
                 >
                   <option value="">Select Category</option>
@@ -690,13 +690,13 @@ export default function MultiStepSubmitPage() {
                     value={keywordInput}
                     onChange={(e) => setKeywordInput(e.target.value)}
                     onKeyPress={handleKeywordKeyPress}
-                    className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:border-indigo-500 focus:outline-none"
+                    className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:border-[#0099CC] focus:outline-none"
                     placeholder="Enter a keyword"
                   />
                   <button
                     type="button"
                     onClick={addKeyword}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium flex items-center"
+                    className="px-6 py-3 bg-[#0099CC] text-white rounded-lg hover:bg-[#0077AA] transition-colors font-medium flex items-center"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add
@@ -708,10 +708,10 @@ export default function MultiStepSubmitPage() {
                     {keywords.map((keyword, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-3"
+                        className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-3"
                       >
                         <span className="text-slate-900">
-                          <span className="font-semibold text-indigo-600 mr-2">
+                          <span className="font-semibold text-[#0099CC] mr-2">
                             {index + 1}.
                           </span>
                           {keyword}
@@ -770,7 +770,7 @@ export default function MultiStepSubmitPage() {
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                     errors.background
                       ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-indigo-500"
+                      : "border-slate-300 focus:border-[#0099CC]"
                   }`}
                   rows="4"
                   placeholder="Describe the context and rationale for your study..."
@@ -801,7 +801,7 @@ export default function MultiStepSubmitPage() {
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                     errors.methods
                       ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-indigo-500"
+                      : "border-slate-300 focus:border-[#0099CC]"
                   }`}
                   rows="4"
                   placeholder="Describe your research methods and approach..."
@@ -830,7 +830,7 @@ export default function MultiStepSubmitPage() {
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                     errors.results
                       ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-indigo-500"
+                      : "border-slate-300 focus:border-[#0099CC]"
                   }`}
                   rows="4"
                   placeholder="Present your key findings..."
@@ -859,7 +859,7 @@ export default function MultiStepSubmitPage() {
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                     errors.conclusion
                       ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-indigo-500"
+                      : "border-slate-300 focus:border-[#0099CC]"
                   }`}
                   rows="4"
                   placeholder="Summarize implications and significance..."
@@ -898,7 +898,7 @@ export default function MultiStepSubmitPage() {
                   Upload PDF * (Required)
                 </label>
                 <div
-                  className={`border-2 border-dashed rounded-lg p-8 text-center hover:border-indigo-400 transition-colors ${
+                  className={`border-2 border-dashed rounded-lg p-8 text-center hover:border-[#0099CC] transition-colors ${
                     errors.pdf ? "border-red-300 bg-red-50" : "border-slate-300"
                   }`}
                 >
@@ -911,7 +911,7 @@ export default function MultiStepSubmitPage() {
                     className="hidden"
                   />
                   <label htmlFor="pdfFile" className="cursor-pointer">
-                    <span className="text-indigo-600 hover:text-indigo-700 font-medium text-lg">
+                    <span className="text-[#0099CC] hover:text-[#0077AA] font-medium text-lg">
                       Click to upload
                     </span>
                     <span className="text-slate-600"> or drag and drop</span>
@@ -971,7 +971,7 @@ export default function MultiStepSubmitPage() {
                   <h3 className="text-sm font-medium text-slate-500 mb-2">Authors</h3>
                   <div className="space-y-2">
                     <div className="bg-white rounded-lg p-3 border border-slate-200">
-                      <p className="text-sm font-medium text-indigo-600 mb-1">
+                      <p className="text-sm font-medium text-[#0099CC] mb-1">
                         Primary Author (Corresponding)
                       </p>
                       <p className="text-slate-900">
@@ -1016,7 +1016,7 @@ export default function MultiStepSubmitPage() {
                     {keywords.map((keyword, idx) => (
                       <span
                         key={idx}
-                        className="px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full"
+                        className="px-3 py-1 bg-blue-50 text-[#0077AA] text-sm rounded-full border border-blue-200"
                       >
                         {keyword}
                       </span>
@@ -1092,7 +1092,7 @@ export default function MultiStepSubmitPage() {
             {currentStep < totalSteps ? (
               <button
                 onClick={nextStep}
-                className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
+                className="px-6 py-3 bg-[#0099CC] text-white font-medium rounded-lg hover:bg-[#0077AA] transition-colors flex items-center"
               >
                 Next
                 <ChevronRight className="w-5 h-5 ml-2" />
@@ -1125,7 +1125,7 @@ export default function MultiStepSubmitPage() {
 
         <div className="mt-6 text-center text-sm text-slate-600">
           Need help? Contact us at{" "}
-          <a href="mailto:sbadat@neomed.edu" className="text-indigo-600 hover:text-indigo-700">
+          <a href="mailto:sbadat@neomed.edu" className="text-[#0099CC] hover:text-[#0077AA]">
             sbadat@neomed.edu
           </a>
         </div>
