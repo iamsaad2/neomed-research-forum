@@ -1,13 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-
-import { Link, useLocation } from "react-router-dom";
 import {
-  Zap, ArrowRight, ChevronRight, TrendingUp,
-  Database, Target, Shield,
-  Stethoscope, BookOpen, FlaskConical, Globe,
-  Award, CheckCircle, AlertCircle, Send, Presentation
+  ArrowRight,
+  CheckCircle, AlertCircle, Send, Presentation
 } from "lucide-react";
 import Stat from "../components/Stat";
+import { Link } from "react-router-dom";
 
 export default function HomePage() {
   const [stats, setStats] = useState({ submissions: 0, departments: 0, presenters: 0, awards: 0 });
@@ -63,53 +60,16 @@ export default function HomePage() {
     return () => clearInterval(id);
   }, []);
 
-  const departments = [
-    { name: "Cardiology", submissions: 45, color: "from-red-500 to-red-600" },
-    { name: "Neurology", submissions: 38, color: "from-purple-500 to-purple-600" },
-    { name: "Oncology", submissions: 42, color: "from-orange-500 to-orange-600" },
-    { name: "Pediatrics", submissions: 28, color: "from-blue-500 to-blue-600" },
-    { name: "Internal Medicine", submissions: 51, color: "from-green-500 to-green-600" },
-    { name: "Surgery", submissions: 33, color: "from-indigo-500 to-indigo-600" },
-    { name: "Psychiatry", submissions: 22, color: "from-pink-500 to-pink-600" },
-    { name: "Radiology", submissions: 19, color: "from-yellow-500 to-yellow-600" },
-    { name: "Pathology", submissions: 24, color: "from-teal-500 to-teal-600" },
-    { name: "Emergency Med", submissions: 31, color: "from-cyan-500 to-cyan-600" },
-    { name: "Anesthesiology", submissions: 18, color: "from-emerald-500 to-emerald-600" },
-    { name: "Dermatology", submissions: 15, color: "from-violet-500 to-violet-600" },
-  ];
-
-  const researchTopics = [
-    { name: "AI in Medicine", size: "text-3xl", weight: "font-bold" },
-    { name: "Gene Therapy", size: "text-2xl", weight: "font-semibold" },
-    { name: "Immunotherapy", size: "text-xl", weight: "font-medium" },
-    { name: "Telemedicine", size: "text-2xl", weight: "font-semibold" },
-    { name: "Precision Medicine", size: "text-3xl", weight: "font-bold" },
-    { name: "Mental Health", size: "text-xl", weight: "font-medium" },
-    { name: "Drug Discovery", size: "text-lg", weight: "font-normal" },
-    { name: "Biomarkers", size: "text-2xl", weight: "font-semibold" },
-    { name: "Clinical Trials", size: "text-xl", weight: "font-medium" },
-    { name: "Digital Health", size: "text-2xl", weight: "font-semibold" },
-    { name: "Nanomedicine", size: "text-lg", weight: "font-normal" },
-    { name: "Stem Cells", size: "text-xl", weight: "font-medium" },
-  ];
-
-  const categories = [
-    { name: "Clinical Research", icon: Stethoscope, percentage: 78, submissions: 267, color: "from-blue-500 to-blue-600", description: "Patient-centered studies and clinical trials" },
-    { name: "Medical Education", icon: BookOpen, percentage: 65, submissions: 223, color: "from-green-500 to-green-600", description: "Innovative teaching methodologies and curriculum development" },
-    { name: "Basic Science", icon: FlaskConical, percentage: 82, submissions: 281, color: "from-purple-500 to-purple-600", description: "Fundamental research and laboratory investigations" },
-    { name: "Public Health", icon: Globe, percentage: 71, submissions: 244, color: "from-orange-500 to-orange-600", description: "Population health and epidemiological studies" },
-  ];
-
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden text-white" style={{background: `linear-gradient(135deg, #004963 0%, #0072BC 70%, #62B5E5 100%)`, fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'}}>
-        <div className="absolute top-0 right-0 w-96 h-96 opacity-10 blur-3xl" style={{backgroundColor: '#62B5E5'}} />
-        <div className="absolute bottom-0 left-0 w-96 h-96 opacity-10 blur-3xl" style={{backgroundColor: '#0072BC'}} />
+      <section className="relative overflow-hidden text-white bg-gradient-to-br from-[#0099CC] to-[#0077AA]">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-black/10 rounded-full blur-3xl" />
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <div className="inline-flex items-center px-5 py-3 backdrop-blur-sm border rounded-full mb-6 shadow-lg" style={{backgroundColor: 'rgba(255, 255, 255, 0.15)', borderColor: 'rgba(255, 255, 255, 0.3)'}}>
+            <div className="inline-flex items-center px-5 py-3 backdrop-blur-sm border border-white/30 rounded-full mb-6 shadow-lg bg-white/15">
               <span className="text-sm font-semibold text-white">Submissions Open - Deadline January 5th</span>
             </div>
 
@@ -122,16 +82,13 @@ export default function HomePage() {
             </h1>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Link to="/submit">
-              <button className="px-8 py-4 bg-white text-[#004963] font-semibold rounded-lg transition-all transform hover:scale-105 hover:shadow-xl flex items-center justify-center">
-              Submit Your Abstract
+              <Link 
+                to="/submit"
+                className="px-8 py-4 bg-white text-[#0099CC] font-semibold rounded-lg transition-all transform hover:scale-105 hover:shadow-xl flex items-center justify-center"
+              >
+                Submit Your Abstract
                 <ArrowRight className="ml-2 w-5 h-5" />
-              </button>
               </Link>
-              <button className="px-8 py-4 bg-transparent border-2 border-white text-white font-semibold rounded-lg transition-all flex items-center justify-center hover:bg-white/10">
-                View Program
-                <ChevronRight className="ml-2 w-5 h-5" />
-              </button>
             </div>
 
             {/* Countdown */}
@@ -141,7 +98,7 @@ export default function HomePage() {
                 ["Hours", timeLeft.hours],
                 ["Minutes", timeLeft.minutes],
               ].map(([label, val]) => (
-                <div key={label} className="backdrop-blur-sm border rounded-xl p-4 text-center shadow-lg" style={{backgroundColor: 'rgba(255, 255, 255, 0.15)', borderColor: 'rgba(255, 255, 255, 0.3)'}}>
+                <div key={label} className="backdrop-blur-sm border border-white/30 rounded-xl p-4 text-center shadow-lg bg-white/15">
                   <div className="text-2xl font-bold text-white mb-1">{val}</div>
                   <div className="text-xs font-medium text-white/80 uppercase tracking-wider">{label}</div>
                 </div>
@@ -155,10 +112,10 @@ export default function HomePage() {
       <section ref={statsRef} className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <Stat value={`${stats.submissions}+`} label="Abstract Submissions" color="text-[#0072BC]" />
-            <Stat value={stats.departments} label="Departments" color="text-[#004963]" />
-            <Stat value={stats.presenters} label="Presenters" color="text-[#62B5E5]" />
-            <Stat value={stats.awards} label="Awards & Recognition" color="text-[#0072BC]" />
+            <Stat value={`${stats.submissions}+`} label="Abstract Submissions" color="text-[#0099CC]" />
+            <Stat value={stats.departments} label="Departments" color="text-slate-900" />
+            <Stat value={stats.presenters} label="Presenters" color="text-[#0099CC]" />
+            <Stat value={stats.awards} label="Awards & Recognition" color="text-slate-900" />
           </div>
         </div>
       </section>
@@ -172,14 +129,14 @@ export default function HomePage() {
           </div>
 
           <div className="relative">
-            <div className="absolute left-1/2 -translate-x-1/2 w-1 h-full" style={{background: `linear-gradient(180deg, #0072BC, #004963)`}} />
+            <div className="absolute left-1/2 -translate-x-1/2 w-1 h-full bg-gradient-to-b from-[#0099CC] to-slate-300" />
             <div className="space-y-12">
               {[
                 { date: "November 21, 2025", title: "Submissions Open", status: "active", icon: CheckCircle, description: "Abstract submission portal opens for all researchers" },
                 { date: "January 7, 2025", title: "Submission Deadline", status: "upcoming", icon: AlertCircle, description: "Final deadline for abstract submissions - 11:59 PM EST" },
                 { date: "January 28, 2025", title: "Acceptance Notifications", status: "upcoming", icon: Send, description: "Authors notified of acceptance decisions" },
                 { date: "February 18, 2025", title: "Final Slides Due", status: "upcoming", icon: Presentation, description: "Accepted authors final slides due" },
-                { date: "February 25, 2025", title: "Research Forum", status: "upcoming", icon: Award, description: "Annual NEOMED Research Forum - Full day event" },
+                { date: "February 25, 2025", title: "Research Forum", status: "upcoming", icon: CheckCircle, description: "Annual NEOMED Research Forum - Full day event" },
               ].map((item, idx) => (
                 <div key={item.title} className={`relative flex items-center ${idx % 2 === 0 ? "justify-start" : "justify-end"}`}>
                   <div className={`w-5/12 ${idx % 2 === 0 ? "text-right pr-8" : "text-left pl-8"}`}>

@@ -11,13 +11,13 @@ export default function Navbar({ mobileMenuOpen, setMobileMenuOpen }) {
         to={to}
         aria-current={isActive ? "page" : undefined}
         className={`relative group px-1 py-2 text-sm font-medium transition-colors
-          ${isActive ? "text-[#0072BC]" : "text-slate-700 hover:text-[#004963]"}
-          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#62B5E5] focus-visible:ring-offset-2 rounded-sm`}
+          ${isActive ? "text-[#0099CC]" : "text-slate-700 hover:text-[#0099CC]"}
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0099CC] focus-visible:ring-offset-2 rounded-sm`}
       >
         {children}
         <span
           className={`pointer-events-none absolute left-0 -bottom-0.5 h-0.5 w-full rounded-full
-            bg-[#0072BC] transform-gpu transition-transform duration-200 origin-left
+            bg-[#0099CC] transform-gpu transition-transform duration-200 origin-left
             ${isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
         />
       </Link>
@@ -30,9 +30,12 @@ export default function Navbar({ mobileMenuOpen, setMobileMenuOpen }) {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-3">
-              <div className="w-9 h-9 bg-gradient-to-br from-[#0072BC] to-[#004963] rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">N</span>
-              </div>
+              {/* NEOMED Logo */}
+              <img 
+                src="/neomed-logo.png" 
+                alt="NEOMED Logo" 
+                className="h-10 w-auto"
+              />
               <div>
                 <div className="text-xl font-bold text-slate-900">NEOMED</div>
                 <div className="text-xs text-slate-600 -mt-1">Research Forum 2025</div>
@@ -47,12 +50,6 @@ export default function Navbar({ mobileMenuOpen, setMobileMenuOpen }) {
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="hidden md:block px-4 py-2 text-sm font-medium text-slate-700 hover:text-[#004963]">
-              Guidelines
-            </button>
-            <button className="hidden md:block px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors bg-gradient-to-r from-[#0072BC] to-[#004963] hover:from-[#0065A8] hover:to-[#003C4E]">
-              Register Now
-            </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 text-slate-700"
@@ -76,19 +73,11 @@ export default function Navbar({ mobileMenuOpen, setMobileMenuOpen }) {
                 key={to}
                 to={to}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block w-full text-left px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded hover:text-[#004963]"
+                className="block w-full text-left px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded hover:text-[#0099CC]"
               >
                 {label}
               </Link>
             ))}
-            <div className="pt-1 flex gap-2">
-              <button className="flex-1 px-3 py-2 text-sm font-medium text-slate-700 hover:text-[#004963]">
-                Guidelines
-              </button>
-              <button className="flex-1 px-3 py-2 text-sm font-medium text-white rounded-md bg-gradient-to-r from-[#0072BC] to-[#004963]">
-                Register
-              </button>
-            </div>
           </div>
         </div>
       )}

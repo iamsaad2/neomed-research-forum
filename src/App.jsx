@@ -9,7 +9,6 @@ import ViewAbstractPage from "./pages/ViewAbstractPage";
 import ReviewerLoginPage from "./pages/ReviewerLoginPage";
 import ReviewerDashboardPage from "./pages/ReviewerDashboardPage";
 import ReviewAbstractPage from "./pages/ReviewAbstractPage";
-import BackendDiagnostic from "./components/BackendDiagnostic";
 
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -34,9 +33,6 @@ export default function App() {
           <Route path="/reviewer/dashboard" element={<ReviewerDashboardPage />} />
           <Route path="/reviewer/abstract/:abstractId" element={<ReviewAbstractPage />} />
         </Routes>
-
-        {/* Backend Diagnostic Tool - Remove in production */}
-        <BackendDiagnostic />
       </div>
     </Router>
   );
