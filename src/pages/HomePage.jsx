@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+
+import { Link, useLocation } from "react-router-dom";
 import {
   Zap, ArrowRight, ChevronRight, TrendingUp,
   Database, Target, Shield,
@@ -120,10 +122,12 @@ export default function HomePage() {
             </h1>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <Link to="/submit">
               <button className="px-8 py-4 bg-white text-[#004963] font-semibold rounded-lg transition-all transform hover:scale-105 hover:shadow-xl flex items-center justify-center">
-                Submit Your Abstract
+              Submit Your Abstract
                 <ArrowRight className="ml-2 w-5 h-5" />
               </button>
+              </Link>
               <button className="px-8 py-4 bg-transparent border-2 border-white text-white font-semibold rounded-lg transition-all flex items-center justify-center hover:bg-white/10">
                 View Program
                 <ChevronRight className="ml-2 w-5 h-5" />
