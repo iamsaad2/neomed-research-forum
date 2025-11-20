@@ -238,12 +238,15 @@ export default function ReviewAbstractPage() {
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-slate-500 mb-2">Keywords</h3>
                 <div className="flex flex-wrap gap-2">
-                  {abstract.keywords.split(",").map((keyword, idx) => (
+                  {(Array.isArray(abstract.keywords) 
+                    ? abstract.keywords 
+                    : abstract.keywords.split(",")
+                  ).map((keyword, idx) => (
                     <span
                       key={idx}
                       className="px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full"
                     >
-                      {keyword.trim()}
+                      {typeof keyword === 'string' ? keyword.trim() : keyword}
                     </span>
                   ))}
                 </div>
@@ -252,9 +255,42 @@ export default function ReviewAbstractPage() {
 
             <div>
               <h3 className="text-sm font-medium text-slate-500 mb-3">Abstract</h3>
-              <p className="text-slate-900 whitespace-pre-line leading-relaxed">
-                {abstract.abstract}
-              </p>
+              <div className="space-y-4">
+                {/* Check if abstractContent exists and display structured */}
+                {abstract.abstractContent?.background ? (
+                  <>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-600 mb-1">BACKGROUND</p>
+                      <p className="text-slate-900 leading-relaxed">
+                        {abstract.abstractContent.background}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-600 mb-1">METHODS</p>
+                      <p className="text-slate-900 leading-relaxed">
+                        {abstract.abstractContent.methods}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-600 mb-1">RESULTS</p>
+                      <p className="text-slate-900 leading-relaxed">
+                        {abstract.abstractContent.results}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-600 mb-1">CONCLUSION</p>
+                      <p className="text-slate-900 leading-relaxed">
+                        {abstract.abstractContent.conclusion}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  /* Fallback to plain abstract text */
+                  <p className="text-slate-900 whitespace-pre-line leading-relaxed">
+                    {abstract.abstract}
+                  </p>
+                )}
+              </div>
             </div>
 
             {abstract.hasPDF && (

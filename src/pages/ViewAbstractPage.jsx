@@ -184,7 +184,7 @@ export default function ViewAbstractPage() {
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             <div>
               <h3 className="text-sm font-medium text-slate-500 mb-2">Authors</h3>
-              <p className="text-slate-900">{abstract.authors}</p>
+              <p className="text-slate-900">{abstract.allAuthors}</p>
             </div>
 
             <div>
@@ -197,7 +197,9 @@ export default function ViewAbstractPage() {
 
             <div>
               <h3 className="text-sm font-medium text-slate-500 mb-2">Department</h3>
-              <p className="text-slate-900">{getDepartmentLabel(abstract.department)}</p>
+              <p className="text-slate-900">
+                {abstract.departmentOther || getDepartmentLabel(abstract.department)}
+              </p>
             </div>
 
             <div>
@@ -205,16 +207,16 @@ export default function ViewAbstractPage() {
               <p className="text-slate-900">{getCategoryLabel(abstract.category)}</p>
             </div>
 
-            {abstract.keywords && (
+            {abstract.keywords && abstract.keywords.length > 0 && (
               <div className="md:col-span-2">
                 <h3 className="text-sm font-medium text-slate-500 mb-2">Keywords</h3>
                 <div className="flex flex-wrap gap-2">
-                  {abstract.keywords.split(",").map((keyword, idx) => (
+                  {abstract.keywords.map((keyword, idx) => (
                     <span
                       key={idx}
                       className="px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full"
                     >
-                      {keyword.trim()}
+                      {keyword}
                     </span>
                   ))}
                 </div>
@@ -246,9 +248,47 @@ export default function ViewAbstractPage() {
 
           <div className="border-t border-slate-200 pt-6">
             <h3 className="text-sm font-medium text-slate-500 mb-3">Abstract</h3>
-            <p className="text-slate-900 whitespace-pre-line leading-relaxed">
-              {abstract.abstract}
-            </p>
+            <div className="space-y-4">
+              {abstract.abstractContent?.background && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-600 mb-1">BACKGROUND</p>
+                  <p className="text-slate-900 leading-relaxed">
+                    {abstract.abstractContent.background}
+                  </p>
+                </div>
+              )}
+              {abstract.abstractContent?.methods && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-600 mb-1">METHODS</p>
+                  <p className="text-slate-900 leading-relaxed">
+                    {abstract.abstractContent.methods}
+                  </p>
+                </div>
+              )}
+              {abstract.abstractContent?.results && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-600 mb-1">RESULTS</p>
+                  <p className="text-slate-900 leading-relaxed">
+                    {abstract.abstractContent.results}
+                  </p>
+                </div>
+              )}
+              {abstract.abstractContent?.conclusion && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-600 mb-1">CONCLUSION</p>
+                  <p className="text-slate-900 leading-relaxed">
+                    {abstract.abstractContent.conclusion}
+                  </p>
+                </div>
+              )}
+              
+              {/* Fallback to fullAbstract if abstractContent sections are not available */}
+              {!abstract.abstractContent?.background && abstract.fullAbstract && (
+                <p className="text-slate-900 whitespace-pre-line leading-relaxed">
+                  {abstract.fullAbstract}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 

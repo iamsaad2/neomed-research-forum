@@ -195,10 +195,13 @@ export default function MultiStepSubmitPage() {
       // Basic info
       formDataToSend.append("title", formData.title);
       
-      // Primary author
-      formDataToSend.append("primaryAuthor", JSON.stringify(formData.primaryAuthor));
+      // Primary author - send as nested fields (NOT as JSON string)
+      formDataToSend.append("primaryAuthor[firstName]", formData.primaryAuthor.firstName);
+      formDataToSend.append("primaryAuthor[lastName]", formData.primaryAuthor.lastName);
+      formDataToSend.append("primaryAuthor[degree]", formData.primaryAuthor.degree);
+      formDataToSend.append("primaryAuthor[email]", formData.primaryAuthor.email);
       
-      // Additional authors
+      // Additional authors - send as JSON string (backend expects this)
       if (formData.additionalAuthors.length > 0) {
         formDataToSend.append("additionalAuthors", JSON.stringify(formData.additionalAuthors));
       } else {
@@ -217,8 +220,11 @@ export default function MultiStepSubmitPage() {
       // Keywords
       formDataToSend.append("keywords", JSON.stringify(keywords));
       
-      // Abstract content
-      formDataToSend.append("abstractContent", JSON.stringify(formData.abstractContent));
+      // Abstract content - send as nested fields
+      formDataToSend.append("abstractContent[background]", formData.abstractContent.background);
+      formDataToSend.append("abstractContent[methods]", formData.abstractContent.methods);
+      formDataToSend.append("abstractContent[results]", formData.abstractContent.results);
+      formDataToSend.append("abstractContent[conclusion]", formData.abstractContent.conclusion);
       
       // PDF file
       formDataToSend.append("pdfFile", pdfFile);
