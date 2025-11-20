@@ -1,33 +1,96 @@
 import { useState } from "react";
-import { FileText, ChevronRight, ChevronLeft, Upload, CheckCircle, X } from "lucide-react";
+import { FileText, ChevronRight, ChevronLeft, Upload, CheckCircle, X, Plus, Trash2 } from "lucide-react";
 import { abstractAPI } from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 export default function MultiStepSubmitPage() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  
+  // Form state
   const [formData, setFormData] = useState({
     title: "",
-    authors: "",
-    email: "",
+    primaryAuthor: {
+      firstName: "",
+      lastName: "",
+      degree: "",
+      email: "",
+    },
+    additionalAuthors: [],
     department: "",
+    departmentOther: "",
     category: "",
-    keywords: "",
-    abstract: "",
+    abstractContent: {
+      background: "",
+      methods: "",
+      results: "",
+      conclusion: "",
+    },
   });
+  
+  const [keywords, setKeywords] = useState([]);
+  const [keywordInput, setKeywordInput] = useState("");
   const [pdfFile, setPdfFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const totalSteps = 4;
+  const totalSteps = 6;
 
   const steps = [
-    { number: 1, title: "Basic Info", description: "Title, Authors, Email" },
-    { number: 2, title: "Details", description: "Department, Category" },
-    { number: 3, title: "Abstract", description: "Research Content" },
-    { number: 4, title: "Review", description: "Confirm & Submit" },
+    { number: 1, title: "Title", description: "Abstract Title" },
+    { number: 2, title: "Authors", description: "Primary & Additional" },
+    { number: 3, title: "Details", description: "Department, Category, Keywords" },
+    { number: 4, title: "Abstract", description: "Background, Methods, Results, Conclusion" },
+    { number: 5, title: "PDF", description: "Required Upload" },
+    { number: 6, title: "Review", description: "Confirm & Submit" },
   ];
 
+  const degrees = ["MD", "DO", "PhD", "MD/PhD", "MS", "BS", "Other"];
+
+  // Author management
+  const addAuthor = () => {
+    setFormData({
+      ...formData,
+      additionalAuthors: [
+        ...formData.additionalAuthors,
+        { firstName: "", lastName: "", degree: "" },
+      ],
+    });
+  };
+
+  const removeAuthor = (index) => {
+    const newAuthors = formData.additionalAuthors.filter((_, i) => i !== index);
+    setFormData({ ...formData, additionalAuthors: newAuthors });
+  };
+
+  const updateAuthor = (index, field, value) => {
+    const newAuthors = [...formData.additionalAuthors];
+    newAuthors[index][field] = value;
+    setFormData({ ...formData, additionalAuthors: newAuthors });
+  };
+
+  // Keyword management
+  const addKeyword = () => {
+    const trimmed = keywordInput.trim();
+    if (trimmed && !keywords.includes(trimmed)) {
+      setKeywords([...keywords, trimmed]);
+      setKeywordInput("");
+      setErrors({ ...errors, keywords: null });
+    }
+  };
+
+  const removeKeyword = (index) => {
+    setKeywords(keywords.filter((_, i) => i !== index));
+  };
+
+  const handleKeywordKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addKeyword();
+    }
+  };
+
+  // File handling
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -44,29 +107,60 @@ export default function MultiStepSubmitPage() {
     }
   };
 
+  // Validation
   const validateStep = (step) => {
     const newErrors = {};
 
     if (step === 1) {
-      if (!formData.title) newErrors.title = "Title is required";
-      if (!formData.authors) newErrors.authors = "Authors are required";
-      if (!formData.email) newErrors.email = "Email is required";
-      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = "Please enter a valid email";
-      }
+      if (!formData.title.trim()) newErrors.title = "Title is required";
     }
 
     if (step === 2) {
-      if (!formData.department) newErrors.department = "Department is required";
-      if (!formData.category) newErrors.category = "Category is required";
+      if (!formData.primaryAuthor.firstName.trim()) 
+        newErrors.primaryFirstName = "First name is required";
+      if (!formData.primaryAuthor.lastName.trim()) 
+        newErrors.primaryLastName = "Last name is required";
+      if (!formData.primaryAuthor.degree) 
+        newErrors.primaryDegree = "Degree is required";
+      if (!formData.primaryAuthor.email.trim()) 
+        newErrors.primaryEmail = "Email is required";
+      if (formData.primaryAuthor.email && !/\S+@\S+\.\S+/.test(formData.primaryAuthor.email)) {
+        newErrors.primaryEmail = "Please enter a valid email";
+      }
+
+      // Validate additional authors if any
+      formData.additionalAuthors.forEach((author, idx) => {
+        if (!author.firstName.trim()) 
+          newErrors[`additionalFirstName${idx}`] = "First name is required";
+        if (!author.lastName.trim()) 
+          newErrors[`additionalLastName${idx}`] = "Last name is required";
+        if (!author.degree) 
+          newErrors[`additionalDegree${idx}`] = "Degree is required";
+      });
     }
 
     if (step === 3) {
-      if (!formData.abstract) newErrors.abstract = "Abstract is required";
-      const wordCount = formData.abstract.split(" ").filter(Boolean).length;
-      if (wordCount > 300) {
-        newErrors.abstract = `Abstract is ${wordCount} words (max 300)`;
+      if (!formData.department) newErrors.department = "Department is required";
+      if (formData.department === "other" && !formData.departmentOther.trim()) {
+        newErrors.departmentOther = "Please specify department";
       }
+      if (!formData.category) newErrors.category = "Category is required";
+      if (keywords.length === 0) newErrors.keywords = "At least one keyword is required";
+    }
+
+    if (step === 4) {
+      if (!formData.abstractContent.background.trim()) 
+        newErrors.background = "Background is required";
+      if (!formData.abstractContent.methods.trim()) 
+        newErrors.methods = "Methods is required";
+      if (!formData.abstractContent.results.trim()) 
+        newErrors.results = "Results is required";
+      if (!formData.abstractContent.conclusion.trim()) 
+        newErrors.conclusion = "Conclusion is required";
+    }
+
+    if (step === 5) {
+      if (!pdfFile) newErrors.pdf = "PDF upload is required";
     }
 
     setErrors(newErrors);
@@ -89,60 +183,89 @@ export default function MultiStepSubmitPage() {
     if (e && e.preventDefault) {
       e.preventDefault();
     }
-    
-    console.log("🔵 handleSubmit called");
-    console.log("📋 Current step:", currentStep);
-    console.log("📝 Form data:", formData);
-    
-    if (!validateStep(currentStep)) {
-      console.log("❌ Validation failed");
-      return;
-    }
 
-    // Check if agreement checkbox is checked
-    const agreementCheckbox = document.getElementById("agreement");
-    console.log("✅ Checkbox element:", agreementCheckbox);
-    console.log("✅ Checkbox checked:", agreementCheckbox?.checked);
-    
-    if (!agreementCheckbox || !agreementCheckbox.checked) {
-      console.log("❌ Checkbox not checked");
-      setErrors({ ...errors, submit: "Please confirm the agreement to submit" });
-      return;
-    }
+    if (!validateStep(currentStep)) return;
 
-    console.log("🚀 Starting submission...");
     setIsSubmitting(true);
     setErrors({});
 
     try {
       const formDataToSend = new FormData();
-      Object.keys(formData).forEach((key) => {
-        formDataToSend.append(key, formData[key]);
-      });
-
-      if (pdfFile) {
-        formDataToSend.append("pdfFile", pdfFile);
+      
+      // Basic info
+      formDataToSend.append("title", formData.title);
+      
+      // Primary author
+      formDataToSend.append("primaryAuthor", JSON.stringify(formData.primaryAuthor));
+      
+      // Additional authors
+      if (formData.additionalAuthors.length > 0) {
+        formDataToSend.append("additionalAuthors", JSON.stringify(formData.additionalAuthors));
+      } else {
+        formDataToSend.append("additionalAuthors", JSON.stringify([]));
       }
+      
+      // Department
+      formDataToSend.append("department", formData.department);
+      if (formData.department === "other") {
+        formDataToSend.append("departmentOther", formData.departmentOther);
+      }
+      
+      // Category
+      formDataToSend.append("category", formData.category);
+      
+      // Keywords
+      formDataToSend.append("keywords", JSON.stringify(keywords));
+      
+      // Abstract content
+      formDataToSend.append("abstractContent", JSON.stringify(formData.abstractContent));
+      
+      // PDF file
+      formDataToSend.append("pdfFile", pdfFile);
 
-      console.log("📤 Submitting abstract to API...");
+      console.log("📤 Submitting abstract...");
       const response = await abstractAPI.submit(formDataToSend);
-      console.log("📥 Response received:", response);
+      console.log("📥 Response:", response);
 
       if (response.success) {
-        console.log("✅ Success! Token:", response.data.viewToken);
-        console.log("🔄 Navigating to thank you page...");
-        // Redirect to thank you page with token
+        console.log("✅ Success! Redirecting to thank you page...");
         navigate(`/thank-you/${response.data.viewToken}`);
-      } else {
-        console.log("❌ Response not successful:", response);
       }
     } catch (error) {
       console.error("❌ Submission error:", error);
-      setErrors({ ...errors, submit: error.message || "Failed to submit. Please try again." });
+      setErrors({ submit: error.message || "Failed to submit. Please try again." });
     } finally {
       setIsSubmitting(false);
-      console.log("✅ Submission process complete");
     }
+  };
+
+  const getDepartmentLabel = (dept) => {
+    const map = {
+      cardiology: "Cardiology",
+      neurology: "Neurology",
+      oncology: "Oncology",
+      pediatrics: "Pediatrics",
+      internal: "Internal Medicine",
+      surgery: "Surgery",
+      psychiatry: "Psychiatry",
+      radiology: "Radiology",
+      pathology: "Pathology",
+      emergency: "Emergency Medicine",
+      anesthesiology: "Anesthesiology",
+      dermatology: "Dermatology",
+      other: "Other",
+    };
+    return map[dept] || dept;
+  };
+
+  const getCategoryLabel = (cat) => {
+    const map = {
+      clinical: "Clinical Research",
+      education: "Medical Education",
+      basic: "Basic Science",
+      public: "Public Health",
+    };
+    return map[cat] || cat;
   };
 
   return (
@@ -177,7 +300,7 @@ export default function MultiStepSubmitPage() {
                   {currentStep > step.number ? (
                     <CheckCircle className="w-6 h-6" />
                   ) : (
-                    <span className="font-semibold">{step.number}</span>
+                    <span className="font-semibold text-sm">{step.number}</span>
                   )}
                 </div>
                 {idx < steps.length - 1 && (
@@ -201,14 +324,15 @@ export default function MultiStepSubmitPage() {
 
         {/* Form Card */}
         <div className="bg-white border border-slate-200 rounded-lg p-8 shadow-sm">
-          {/* Step 1: Basic Information */}
+          
+          {/* Step 1: Title */}
           {currentStep === 1 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">Basic Information</h2>
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">Abstract Title</h2>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Abstract Title *
+                  Title *
                 </label>
                 <input
                   type="text"
@@ -223,53 +347,248 @@ export default function MultiStepSubmitPage() {
                 />
                 {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
               </div>
+            </div>
+          )}
 
+          {/* Step 2: Authors */}
+          {currentStep === 2 && (
+            <div className="space-y-8">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Authors *
-                </label>
-                <input
-                  type="text"
-                  value={formData.authors}
-                  onChange={(e) => setFormData({ ...formData, authors: e.target.value })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                    errors.authors
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-indigo-500"
-                  }`}
-                  placeholder="Smith J, Johnson K, Williams R"
-                />
-                {errors.authors && <p className="mt-1 text-sm text-red-600">{errors.authors}</p>}
-                <p className="mt-1 text-sm text-slate-500">
-                  Separate multiple authors with commas
-                </p>
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">Authors</h2>
+                <p className="text-slate-600 mb-6">Primary author will receive all correspondence</p>
               </div>
 
+              {/* Primary Author */}
+              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6">
+                <h3 className="text-lg font-bold text-indigo-900 mb-4">Primary Author *</h3>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      First Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.primaryAuthor.firstName}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          primaryAuthor: { ...formData.primaryAuthor, firstName: e.target.value },
+                        })
+                      }
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
+                        errors.primaryFirstName
+                          ? "border-red-300 focus:border-red-500"
+                          : "border-slate-300 focus:border-indigo-500"
+                      }`}
+                      placeholder="John"
+                    />
+                    {errors.primaryFirstName && (
+                      <p className="mt-1 text-sm text-red-600">{errors.primaryFirstName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.primaryAuthor.lastName}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          primaryAuthor: { ...formData.primaryAuthor, lastName: e.target.value },
+                        })
+                      }
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
+                        errors.primaryLastName
+                          ? "border-red-300 focus:border-red-500"
+                          : "border-slate-300 focus:border-indigo-500"
+                      }`}
+                      placeholder="Doe"
+                    />
+                    {errors.primaryLastName && (
+                      <p className="mt-1 text-sm text-red-600">{errors.primaryLastName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Terminal Degree *
+                    </label>
+                    <select
+                      value={formData.primaryAuthor.degree}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          primaryAuthor: { ...formData.primaryAuthor, degree: e.target.value },
+                        })
+                      }
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none bg-white ${
+                        errors.primaryDegree
+                          ? "border-red-300 focus:border-red-500"
+                          : "border-slate-300 focus:border-indigo-500"
+                      }`}
+                    >
+                      <option value="">Select Degree</option>
+                      {degrees.map((deg) => (
+                        <option key={deg} value={deg}>
+                          {deg}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.primaryDegree && (
+                      <p className="mt-1 text-sm text-red-600">{errors.primaryDegree}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.primaryAuthor.email}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          primaryAuthor: { ...formData.primaryAuthor, email: e.target.value },
+                        })
+                      }
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
+                        errors.primaryEmail
+                          ? "border-red-300 focus:border-red-500"
+                          : "border-slate-300 focus:border-indigo-500"
+                      }`}
+                      placeholder="john.doe@neomed.edu"
+                    />
+                    {errors.primaryEmail && (
+                      <p className="mt-1 text-sm text-red-600">{errors.primaryEmail}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Authors */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Corresponding Author Email *
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                    errors.email
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-indigo-500"
-                  }`}
-                  placeholder="author@neomed.edu"
-                />
-                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                <p className="mt-1 text-sm text-slate-500">
-                  We'll send your submission confirmation and status updates here
-                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-slate-900">Additional Authors (Optional)</h3>
+                  <button
+                    type="button"
+                    onClick={addAuthor}
+                    className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Author
+                  </button>
+                </div>
+
+                {formData.additionalAuthors.length === 0 ? (
+                  <div className="text-center py-8 border-2 border-dashed border-slate-300 rounded-lg">
+                    <p className="text-slate-500">No additional authors added yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {formData.additionalAuthors.map((author, index) => (
+                      <div
+                        key={index}
+                        className="bg-slate-50 border border-slate-200 rounded-lg p-6"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-semibold text-slate-900">Author {index + 1}</h4>
+                          <button
+                            type="button"
+                            onClick={() => removeAuthor(index)}
+                            className="text-red-600 hover:text-red-700 flex items-center text-sm"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Remove
+                          </button>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              First Name *
+                            </label>
+                            <input
+                              type="text"
+                              value={author.firstName}
+                              onChange={(e) => updateAuthor(index, "firstName", e.target.value)}
+                              className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
+                                errors[`additionalFirstName${index}`]
+                                  ? "border-red-300"
+                                  : "border-slate-300"
+                              }`}
+                              placeholder="First name"
+                            />
+                            {errors[`additionalFirstName${index}`] && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {errors[`additionalFirstName${index}`]}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              Last Name *
+                            </label>
+                            <input
+                              type="text"
+                              value={author.lastName}
+                              onChange={(e) => updateAuthor(index, "lastName", e.target.value)}
+                              className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
+                                errors[`additionalLastName${index}`]
+                                  ? "border-red-300"
+                                  : "border-slate-300"
+                              }`}
+                              placeholder="Last name"
+                            />
+                            {errors[`additionalLastName${index}`] && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {errors[`additionalLastName${index}`]}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              Degree *
+                            </label>
+                            <select
+                              value={author.degree}
+                              onChange={(e) => updateAuthor(index, "degree", e.target.value)}
+                              className={`w-full px-4 py-3 border rounded-lg focus:outline-none bg-white ${
+                                errors[`additionalDegree${index}`]
+                                  ? "border-red-300"
+                                  : "border-slate-300"
+                              }`}
+                            >
+                              <option value="">Select</option>
+                              {degrees.map((deg) => (
+                                <option key={deg} value={deg}>
+                                  {deg}
+                                </option>
+                              ))}
+                            </select>
+                            {errors[`additionalDegree${index}`] && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {errors[`additionalDegree${index}`]}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Step 2: Research Details */}
-          {currentStep === 2 && (
+          {/* Step 3: Department, Category, Keywords */}
+          {currentStep === 3 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-slate-900 mb-6">Research Details</h2>
 
@@ -299,11 +618,36 @@ export default function MultiStepSubmitPage() {
                   <option value="emergency">Emergency Medicine</option>
                   <option value="anesthesiology">Anesthesiology</option>
                   <option value="dermatology">Dermatology</option>
+                  <option value="other">Other</option>
                 </select>
                 {errors.department && (
                   <p className="mt-1 text-sm text-red-600">{errors.department}</p>
                 )}
               </div>
+
+              {formData.department === "other" && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Specify Department *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.departmentOther}
+                    onChange={(e) =>
+                      setFormData({ ...formData, departmentOther: e.target.value })
+                    }
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
+                      errors.departmentOther
+                        ? "border-red-300 focus:border-red-500"
+                        : "border-slate-300 focus:border-indigo-500"
+                    }`}
+                    placeholder="Enter department name"
+                  />
+                  {errors.departmentOther && (
+                    <p className="mt-1 text-sm text-red-600">{errors.departmentOther}</p>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -329,26 +673,230 @@ export default function MultiStepSubmitPage() {
                 )}
               </div>
 
+              {/* Keywords */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Keywords (Optional)
+                  Keywords * (Add at least one)
                 </label>
-                <input
-                  type="text"
-                  value={formData.keywords}
-                  onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:border-indigo-500 focus:outline-none"
-                  placeholder="AI, machine learning, diagnostics"
-                />
-                <p className="mt-1 text-sm text-slate-500">Enter 3-5 keywords separated by commas</p>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={keywordInput}
+                    onChange={(e) => setKeywordInput(e.target.value)}
+                    onKeyPress={handleKeywordKeyPress}
+                    className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:border-indigo-500 focus:outline-none"
+                    placeholder="Enter a keyword"
+                  />
+                  <button
+                    type="button"
+                    onClick={addKeyword}
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium flex items-center"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add
+                  </button>
+                </div>
+
+                {keywords.length > 0 ? (
+                  <div className="space-y-2">
+                    {keywords.map((keyword, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-3"
+                      >
+                        <span className="text-slate-900">
+                          <span className="font-semibold text-indigo-600 mr-2">
+                            {index + 1}.
+                          </span>
+                          {keyword}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeKeyword(index)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 border-2 border-dashed border-slate-300 rounded-lg">
+                    <p className="text-slate-500 text-sm">No keywords added yet</p>
+                  </div>
+                )}
+
+                {errors.keywords && (
+                  <p className="mt-2 text-sm text-red-600">{errors.keywords}</p>
+                )}
+                <p className="mt-2 text-sm text-slate-500">
+                  Enter 3-5 keywords that best describe your research
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Abstract Content */}
+          {currentStep === 4 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">Abstract Content</h2>
+                <p className="text-slate-600 mb-6">
+                  Please provide your abstract in the structured format below
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Upload PDF (Optional)
+                  Background *
                 </label>
-                <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors">
-                  <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                <textarea
+                  value={formData.abstractContent.background}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      abstractContent: {
+                        ...formData.abstractContent,
+                        background: e.target.value,
+                      },
+                    })
+                  }
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
+                    errors.background
+                      ? "border-red-300 focus:border-red-500"
+                      : "border-slate-300 focus:border-indigo-500"
+                  }`}
+                  rows="4"
+                  placeholder="Describe the context and rationale for your study..."
+                />
+                {errors.background && (
+                  <p className="mt-1 text-sm text-red-600">{errors.background}</p>
+                )}
+                <p className="mt-1 text-sm text-slate-500">
+                  {formData.abstractContent.background.split(" ").filter(Boolean).length} words
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Methods *
+                </label>
+                <textarea
+                  value={formData.abstractContent.methods}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      abstractContent: {
+                        ...formData.abstractContent,
+                        methods: e.target.value,
+                      },
+                    })
+                  }
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
+                    errors.methods
+                      ? "border-red-300 focus:border-red-500"
+                      : "border-slate-300 focus:border-indigo-500"
+                  }`}
+                  rows="4"
+                  placeholder="Describe your research methods and approach..."
+                />
+                {errors.methods && <p className="mt-1 text-sm text-red-600">{errors.methods}</p>}
+                <p className="mt-1 text-sm text-slate-500">
+                  {formData.abstractContent.methods.split(" ").filter(Boolean).length} words
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Results *
+                </label>
+                <textarea
+                  value={formData.abstractContent.results}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      abstractContent: {
+                        ...formData.abstractContent,
+                        results: e.target.value,
+                      },
+                    })
+                  }
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
+                    errors.results
+                      ? "border-red-300 focus:border-red-500"
+                      : "border-slate-300 focus:border-indigo-500"
+                  }`}
+                  rows="4"
+                  placeholder="Present your key findings..."
+                />
+                {errors.results && <p className="mt-1 text-sm text-red-600">{errors.results}</p>}
+                <p className="mt-1 text-sm text-slate-500">
+                  {formData.abstractContent.results.split(" ").filter(Boolean).length} words
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Conclusion *
+                </label>
+                <textarea
+                  value={formData.abstractContent.conclusion}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      abstractContent: {
+                        ...formData.abstractContent,
+                        conclusion: e.target.value,
+                      },
+                    })
+                  }
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
+                    errors.conclusion
+                      ? "border-red-300 focus:border-red-500"
+                      : "border-slate-300 focus:border-indigo-500"
+                  }`}
+                  rows="4"
+                  placeholder="Summarize implications and significance..."
+                />
+                {errors.conclusion && (
+                  <p className="mt-1 text-sm text-red-600">{errors.conclusion}</p>
+                )}
+                <p className="mt-1 text-sm text-slate-500">
+                  {formData.abstractContent.conclusion.split(" ").filter(Boolean).length} words
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-900">
+                  <strong>Total word count:</strong>{" "}
+                  {Object.values(formData.abstractContent)
+                    .join(" ")
+                    .split(" ")
+                    .filter(Boolean).length}{" "}
+                  words
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5: PDF Upload */}
+          {currentStep === 5 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">PDF Upload</h2>
+                <p className="text-slate-600 mb-6">Upload a PDF version of your abstract</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Upload PDF * (Required)
+                </label>
+                <div
+                  className={`border-2 border-dashed rounded-lg p-8 text-center hover:border-indigo-400 transition-colors ${
+                    errors.pdf ? "border-red-300 bg-red-50" : "border-slate-300"
+                  }`}
+                >
+                  <Upload className="w-12 h-12 mx-auto mb-4 text-slate-400" />
                   <input
                     type="file"
                     id="pdfFile"
@@ -357,146 +905,159 @@ export default function MultiStepSubmitPage() {
                     className="hidden"
                   />
                   <label htmlFor="pdfFile" className="cursor-pointer">
-                    <span className="text-indigo-600 hover:text-indigo-700 font-medium">
+                    <span className="text-indigo-600 hover:text-indigo-700 font-medium text-lg">
                       Click to upload
                     </span>
                     <span className="text-slate-600"> or drag and drop</span>
                   </label>
-                  <p className="text-xs text-slate-500 mt-1">PDF up to 10MB</p>
+                  <p className="text-sm text-slate-500 mt-2">PDF up to 10MB</p>
+
                   {pdfFile && (
-                    <div className="mt-3 flex items-center justify-center text-sm text-slate-700">
-                      <FileText className="w-4 h-4 mr-2 text-green-600" />
-                      {pdfFile.name}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPdfFile(null);
-                          document.getElementById("pdfFile").value = "";
-                        }}
-                        className="ml-2 text-red-600 hover:text-red-700"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                    <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center justify-center text-green-900">
+                        <FileText className="w-5 h-5 mr-2 text-green-600" />
+                        <span className="font-medium">{pdfFile.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPdfFile(null);
+                            document.getElementById("pdfFile").value = "";
+                            setErrors({ ...errors, pdf: null });
+                          }}
+                          className="ml-3 text-red-600 hover:text-red-700"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <p className="text-sm text-green-700 mt-2">
+                        {(pdfFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
                     </div>
                   )}
-                  {errors.pdf && <p className="mt-2 text-sm text-red-600">{errors.pdf}</p>}
+
+                  {errors.pdf && (
+                    <p className="mt-4 text-sm text-red-600 font-medium">{errors.pdf}</p>
+                  )}
+                </div>
+
+                <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-sm text-yellow-900">
+                    <strong>⚠️ Note:</strong> PDF upload is required. Please ensure your PDF
+                    matches the content entered in the previous steps.
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 3: Abstract Text */}
-          {currentStep === 3 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">Abstract Content</h2>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Abstract Text * (Max 300 words)
-                </label>
-                <textarea
-                  value={formData.abstract}
-                  onChange={(e) => setFormData({ ...formData, abstract: e.target.value })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                    errors.abstract
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-indigo-500"
-                  }`}
-                  rows="12"
-                  placeholder="Background: &#10;Methods: &#10;Results: &#10;Conclusion: "
-                />
-                {errors.abstract && <p className="mt-1 text-sm text-red-600">{errors.abstract}</p>}
-                <div className="mt-2 flex justify-between text-sm">
-                  <span className="text-slate-500">
-                    Use structured format: Background, Methods, Results, Conclusion
-                  </span>
-                  <span
-                    className={`${
-                      formData.abstract.split(" ").filter(Boolean).length > 300
-                        ? "text-red-600 font-medium"
-                        : "text-slate-500"
-                    }`}
-                  >
-                    {formData.abstract.split(" ").filter(Boolean).length}/300 words
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Review */}
-          {currentStep === 4 && (
+          {/* Step 6: Review */}
+          {currentStep === 6 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-slate-900 mb-6">Review Your Submission</h2>
 
-              <div className="bg-slate-50 rounded-lg p-6 space-y-4">
+              <div className="bg-slate-50 rounded-lg p-6 space-y-6">
                 <div>
                   <h3 className="text-sm font-medium text-slate-500 mb-1">Title</h3>
-                  <p className="text-slate-900">{formData.title}</p>
+                  <p className="text-slate-900 font-medium">{formData.title}</p>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-slate-500 mb-1">Authors</h3>
-                  <p className="text-slate-900">{formData.authors}</p>
+                  <h3 className="text-sm font-medium text-slate-500 mb-2">Authors</h3>
+                  <div className="space-y-2">
+                    <div className="bg-white rounded-lg p-3 border border-slate-200">
+                      <p className="text-sm font-medium text-indigo-600 mb-1">
+                        Primary Author (Corresponding)
+                      </p>
+                      <p className="text-slate-900">
+                        {formData.primaryAuthor.firstName} {formData.primaryAuthor.lastName},{" "}
+                        {formData.primaryAuthor.degree}
+                      </p>
+                      <p className="text-sm text-slate-600">{formData.primaryAuthor.email}</p>
+                    </div>
+                    {formData.additionalAuthors.map((author, idx) => (
+                      <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
+                        <p className="text-sm font-medium text-slate-600 mb-1">
+                          Author {idx + 1}
+                        </p>
+                        <p className="text-slate-900">
+                          {author.firstName} {author.lastName}, {author.degree}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-medium text-slate-500 mb-1">Email</h3>
-                  <p className="text-slate-900">{formData.email}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <h3 className="text-sm font-medium text-slate-500 mb-1">Department</h3>
-                    <p className="text-slate-900 capitalize">{formData.department}</p>
+                    <p className="text-slate-900">
+                      {formData.department === "other"
+                        ? formData.departmentOther
+                        : getDepartmentLabel(formData.department)}
+                    </p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-slate-500 mb-1">Category</h3>
-                    <p className="text-slate-900 capitalize">{formData.category}</p>
+                    <p className="text-slate-900">{getCategoryLabel(formData.category)}</p>
                   </div>
                 </div>
-
-                {formData.keywords && (
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-500 mb-1">Keywords</h3>
-                    <p className="text-slate-900">{formData.keywords}</p>
-                  </div>
-                )}
 
                 <div>
-                  <h3 className="text-sm font-medium text-slate-500 mb-1">Abstract</h3>
-                  <p className="text-slate-900 whitespace-pre-line">{formData.abstract}</p>
+                  <h3 className="text-sm font-medium text-slate-500 mb-2">
+                    Keywords ({keywords.length})
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {keywords.map((keyword, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full"
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
-                {pdfFile && (
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-500 mb-1">PDF</h3>
-                    <p className="text-slate-900 flex items-center">
-                      <FileText className="w-4 h-4 mr-2 text-green-600" />
-                      {pdfFile.name}
-                    </p>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-500 mb-2">Abstract Content</h3>
+                  <div className="space-y-3">
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <p className="text-xs font-semibold text-slate-600 mb-1">BACKGROUND</p>
+                      <p className="text-slate-900 text-sm">
+                        {formData.abstractContent.background}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <p className="text-xs font-semibold text-slate-600 mb-1">METHODS</p>
+                      <p className="text-slate-900 text-sm">{formData.abstractContent.methods}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <p className="text-xs font-semibold text-slate-600 mb-1">RESULTS</p>
+                      <p className="text-slate-900 text-sm">{formData.abstractContent.results}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <p className="text-xs font-semibold text-slate-600 mb-1">CONCLUSION</p>
+                      <p className="text-slate-900 text-sm">
+                        {formData.abstractContent.conclusion}
+                      </p>
+                    </div>
                   </div>
-                )}
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-slate-500 mb-1">PDF</h3>
+                  <div className="flex items-center text-green-600">
+                    <FileText className="w-4 h-4 mr-2" />
+                    <span className="text-sm font-medium">{pdfFile?.name}</span>
+                  </div>
+                </div>
               </div>
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <p className="text-sm text-yellow-900">
-                  <strong>Important:</strong> Once submitted, you cannot edit your abstract. Please
-                  review carefully before submitting.
+                  <strong>⚠️ Important:</strong> Once submitted, you cannot edit your abstract.
+                  Please review carefully before submitting.
                 </p>
-              </div>
-
-              <div className="flex items-start">
-                <input 
-                  type="checkbox" 
-                  id="agreement" 
-                  className="mt-1 mr-3 w-4 h-4"
-                />
-                <label htmlFor="agreement" className="text-sm text-slate-700">
-                  I confirm that this abstract represents original work and all authors have
-                  approved this submission. I understand that I cannot edit this submission after
-                  submitting.
-                </label>
               </div>
 
               {errors.submit && (
