@@ -238,10 +238,23 @@ export default function ViewAbstractPage() {
             {abstract.hasPDF && (
               <div>
                 <h3 className="text-sm font-medium text-slate-500 mb-2">PDF Attachment</h3>
-                <p className="text-slate-900 flex items-center">
-                  <FileText className="w-4 h-4 mr-2 text-green-600" />
-                  Uploaded ✓
-                </p>
+                <div className="flex items-center gap-3">
+                  <p className="text-slate-900 flex items-center">
+                    <FileText className="w-4 h-4 mr-2 text-green-600" />
+                    Uploaded ✓
+                  </p>
+                  {abstract.pdfUrl && (
+                    <a
+                      href={`${import.meta.env.VITE_API_URL}${abstract.pdfUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center"
+                    >
+                      <FileText className="w-4 h-4 mr-1" />
+                      View PDF
+                    </a>
+                  )}
+                </div>
               </div>
             )}
           </div>

@@ -299,6 +299,11 @@ export default function ReviewAbstractPage() {
                   <FileText className="w-5 h-5 mr-2" />
                   PDF attachment available
                 </p>
+
+                <p>PDF attachment available</p>
+<a href={pdfUrl} target="_blank">
+  View PDF
+</a>
               </div>
             )}
           </div>
