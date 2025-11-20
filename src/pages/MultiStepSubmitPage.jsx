@@ -45,7 +45,7 @@ export default function MultiStepSubmitPage() {
     { number: 6, title: "Review", description: "Confirm & Submit" },
   ];
 
-  const degrees = ["MD", "DO", "PhD", "MD/PhD", "MS", "BS", "Other"];
+  const degrees = ["BS","BA","MD", "DO", "PhD", "MD/PhD", "MS", "Other"];
 
   // Author management
   const addAuthor = () => {
