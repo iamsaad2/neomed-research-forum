@@ -15,7 +15,7 @@ export default function TestSubmit() {
     try {
       const formData = new FormData();
       formData.append("title", "Test Abstract Title");
-      formData.append("authors", "John Doe, Jane Smith");
+      formData.append("authors", "John Do, Jane Smith");
       formData.append("email", "sbadat@neomed.edu");
       formData.append("department", "cardiology");
       formData.append("category", "clinical");
