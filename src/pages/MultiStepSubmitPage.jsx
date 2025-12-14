@@ -880,7 +880,7 @@ export default function MultiStepSubmitPage() {
                     ? "text-yellow-900"
                     : "text-blue-900"
                 }`}>
-                  <strong>Total word count:</strong>{" "}
+                  <p>Total word count:</p>{" "}
                   {getTotalWordCount()} / {MAX_WORD_COUNT} words
                   {getTotalWordCount() >= MAX_WORD_COUNT && " - Word limit reached!"}
                 </p>
