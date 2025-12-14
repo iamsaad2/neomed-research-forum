@@ -62,7 +62,7 @@ export default function ThankYouPage() {
             />
             <button
               onClick={copyLink}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-[#0099CC] text-white rounded-lg hover:bg-[#0077AA] transition-colors text-sm font-medium"
             >
               {copied ? "Copied!" : "Copy"}
             </button>
@@ -70,7 +70,7 @@ export default function ThankYouPage() {
 
           <button
             onClick={() => navigate(`/view/${token}`)}
-            className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-colors flex items-center justify-center"
+            className="w-full px-6 py-3 bg-[#0099CC] text-white font-medium rounded-lg hover:bg-[#0077AA] transition-colors flex items-center justify-center"
           >
             <Eye className="w-5 h-5 mr-2" />
             View My Submission Now
@@ -80,7 +80,7 @@ export default function ThankYouPage() {
         {/* Timeline Card */}
         <div className="bg-white border border-slate-200 rounded-lg p-8 shadow-sm mb-6">
           <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center">
-            <Calendar className="w-5 h-5 mr-2 text-indigo-600" />
+            <Calendar className="w-5 h-5 mr-2 text-[#0099CC]" />
             What Happens Next?
           </h2>
 
@@ -158,7 +158,7 @@ export default function ThankYouPage() {
           </button>
           <button
             onClick={() => navigate(`/view/${token}`)}
-            className="flex-1 px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center"
+            className="flex-1 px-6 py-3 bg-[#0099CC] text-white font-medium rounded-lg hover:bg-[#0077AA] transition-colors flex items-center justify-center"
           >
             View Submission
             <ArrowRight className="w-5 h-5 ml-2" />
@@ -167,7 +167,7 @@ export default function ThankYouPage() {
 
         <div className="mt-8 text-center text-sm text-slate-600">
           Questions? Contact us at{" "}
-          <a href="mailto:sbadat@neomed.edu" className="text-indigo-600 hover:text-indigo-700 font-medium">
+          <a href="mailto:sbadat@neomed.edu" className="text-[#0099CC] hover:text-[#0077AA] font-medium">
             sbadat@neomed.edu
           </a>
         </div>
