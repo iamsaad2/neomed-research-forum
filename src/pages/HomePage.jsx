@@ -52,7 +52,7 @@ export default function HomePage() {
 
             <p className="text-xl text-slate-600 mb-10 leading-relaxed">
               Northeast Ohio Medical University's premier annual research showcase.
-              Submit your abstract to share groundbreaking research with the medical community.
+              Submit your abstract to share valuable research with the medical community.
             </p>
 
             {/* Primary CTA */}
@@ -97,7 +97,7 @@ export default function HomePage() {
           <div className="space-y-6">
             {[
               { 
-                date: "November 24, 2025", 
+                date: "December 15, 2025", 
                 title: "Abstract Submissions Open", 
                 description: "Submission portal opens for all researchers",
                 icon: Calendar,

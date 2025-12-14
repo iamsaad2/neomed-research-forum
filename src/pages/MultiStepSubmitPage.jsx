@@ -972,7 +972,7 @@ export default function MultiStepSubmitPage() {
                   <div className="space-y-2">
                     <div className="bg-white rounded-lg p-3 border border-slate-200">
                       <p className="text-sm font-medium text-[#0099CC] mb-1">
-                        Primary Author (Corresponding)
+                        Primary Author 
                       </p>
                       <p className="text-slate-900">
                         {formData.primaryAuthor.firstName} {formData.primaryAuthor.lastName},{" "}
