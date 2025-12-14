@@ -35,6 +35,7 @@ export default function MultiStepSubmitPage() {
   const [errors, setErrors] = useState({});
 
   const totalSteps = 6;
+  const MAX_WORD_COUNT = 400;
 
   const steps = [
     { number: 1, title: "Title", description: "Abstract Title" },
@@ -87,6 +88,31 @@ export default function MultiStepSubmitPage() {
     if (e.key === "Enter") {
       e.preventDefault();
       addKeyword();
+    }
+  };
+
+  // Word count helper
+  const getTotalWordCount = () => {
+    return Object.values(formData.abstractContent)
+      .join(" ")
+      .split(" ")
+      .filter(Boolean).length;
+  };
+
+  const handleAbstractContentChange = (field, value) => {
+    const currentContent = { ...formData.abstractContent };
+    const tempContent = { ...currentContent, [field]: value };
+    const newWordCount = Object.values(tempContent)
+      .join(" ")
+      .split(" ")
+      .filter(Boolean).length;
+
+    // Only update if under word limit
+    if (newWordCount <= MAX_WORD_COUNT) {
+      setFormData({
+        ...formData,
+        abstractContent: tempContent,
+      });
     }
   };
 
@@ -758,15 +784,7 @@ export default function MultiStepSubmitPage() {
                 </label>
                 <textarea
                   value={formData.abstractContent.background}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      abstractContent: {
-                        ...formData.abstractContent,
-                        background: e.target.value,
-                      },
-                    })
-                  }
+                  onChange={(e) => handleAbstractContentChange("background", e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                     errors.background
                       ? "border-red-300 focus:border-red-500"
@@ -789,15 +807,7 @@ export default function MultiStepSubmitPage() {
                 </label>
                 <textarea
                   value={formData.abstractContent.methods}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      abstractContent: {
-                        ...formData.abstractContent,
-                        methods: e.target.value,
-                      },
-                    })
-                  }
+                  onChange={(e) => handleAbstractContentChange("methods", e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                     errors.methods
                       ? "border-red-300 focus:border-red-500"
@@ -818,15 +828,7 @@ export default function MultiStepSubmitPage() {
                 </label>
                 <textarea
                   value={formData.abstractContent.results}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      abstractContent: {
-                        ...formData.abstractContent,
-                        results: e.target.value,
-                      },
-                    })
-                  }
+                  onChange={(e) => handleAbstractContentChange("results", e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                     errors.results
                       ? "border-red-300 focus:border-red-500"
@@ -847,15 +849,7 @@ export default function MultiStepSubmitPage() {
                 </label>
                 <textarea
                   value={formData.abstractContent.conclusion}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      abstractContent: {
-                        ...formData.abstractContent,
-                        conclusion: e.target.value,
-                      },
-                    })
-                  }
+                  onChange={(e) => handleAbstractContentChange("conclusion", e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
                     errors.conclusion
                       ? "border-red-300 focus:border-red-500"
@@ -872,14 +866,23 @@ export default function MultiStepSubmitPage() {
                 </p>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-900">
+              <div className={`border rounded-lg p-4 ${
+                getTotalWordCount() >= MAX_WORD_COUNT
+                  ? "bg-red-50 border-red-200"
+                  : getTotalWordCount() >= MAX_WORD_COUNT * 0.9
+                  ? "bg-yellow-50 border-yellow-200"
+                  : "bg-blue-50 border-blue-200"
+              }`}>
+                <p className={`text-sm font-semibold ${
+                  getTotalWordCount() >= MAX_WORD_COUNT
+                    ? "text-red-900"
+                    : getTotalWordCount() >= MAX_WORD_COUNT * 0.9
+                    ? "text-yellow-900"
+                    : "text-blue-900"
+                }`}>
                   <strong>Total word count:</strong>{" "}
-                  {Object.values(formData.abstractContent)
-                    .join(" ")
-                    .split(" ")
-                    .filter(Boolean).length}{" "}
-                  words
+                  {getTotalWordCount()} / {MAX_WORD_COUNT} words
+                  {getTotalWordCount() >= MAX_WORD_COUNT && " - Word limit reached!"}
                 </p>
               </div>
             </div>
