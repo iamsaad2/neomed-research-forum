@@ -15,7 +15,7 @@ export default function HomePage() {
   // countdown
   useEffect(() => {
     const calc = () => {
-      const deadline = new Date("2026-01-05T23:59:59");
+      const deadline = new Date("2026-01-12T23:59:59");
       const now = new Date();
       const diff = deadline - now;
       if (diff > 0) {
@@ -104,7 +104,7 @@ export default function HomePage() {
                 status: "open"
               },
               { 
-                date: "January 5, 2026", 
+                date: "January 12, 2026", 
                 title: "Abstract Submission Deadline", 
                 description: "Submit your research abstract by 11:59 PM EST",
                 icon: Clock,
