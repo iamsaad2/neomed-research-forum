@@ -41,7 +41,7 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-full mb-8 shadow-sm">
               <Clock className="w-4 h-4 text-[#0099CC]" />
               <span className="text-sm font-medium text-slate-700">
-                Submission Deadline: January 5, 2026
+                Submission Deadline: January 12, 2026
               </span>
             </div>
 
