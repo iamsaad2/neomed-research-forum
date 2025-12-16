@@ -47,7 +47,7 @@ export default function HomePage() {
 
             {/* Main Heading */}
             <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-              Research Forum 2025
+              Research Forum 2026
             </h1>
 
             <p className="text-xl text-slate-600 mb-10 leading-relaxed">
@@ -170,7 +170,7 @@ export default function HomePage() {
             Ready to Share Your Research?
           </h2>
           <p className="text-lg text-slate-600 mb-8">
-            Join fellow researchers and clinicians in advancing medical knowledge at NEOMED's Research Forum 2025.
+            Join fellow researchers and clinicians in advancing medical knowledge at NEOMED's Research Forum 2026.
           </p>
           <Link 
             to="/submit"
