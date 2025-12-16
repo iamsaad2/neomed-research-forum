@@ -27,7 +27,7 @@ export default function ThankYouPage() {
             Submission Received!
           </h1>
           <p className="text-xl text-slate-600">
-            Thank you for submitting to NEOMED Research Forum 2025
+            Thank you for submitting to NEOMED Research Forum 2026
           </p>
         </div>
 
@@ -100,7 +100,7 @@ export default function ThankYouPage() {
                 <span className="text-sm font-bold text-blue-600">1</span>
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-slate-900">January 7 - 28, 2025</h3>
+                <h3 className="font-semibold text-slate-900">January 7 - 28, 2026</h3>
                 <p className="text-sm text-slate-600">Review Period - Committee evaluates all submissions</p>
               </div>
             </div>
@@ -110,7 +110,7 @@ export default function ThankYouPage() {
                 <span className="text-sm font-bold text-blue-600">2</span>
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-slate-900">January 28, 2025</h3>
+                <h3 className="font-semibold text-slate-900">January 28, 2026</h3>
                 <p className="text-sm text-slate-600">Decision Notification - You'll receive an email with the decision</p>
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function ThankYouPage() {
                 <span className="text-sm font-bold text-blue-600">3</span>
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-slate-900">February 18, 2025</h3>
+                <h3 className="font-semibold text-slate-900">February 18, 2026</h3>
                 <p className="text-sm text-slate-600">Final Slides Due - If accepted, submit your presentation slides</p>
               </div>
             </div>
@@ -130,7 +130,7 @@ export default function ThankYouPage() {
                 <span className="text-sm font-bold text-purple-600">🎉</span>
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-slate-900">February 25, 2025</h3>
+                <h3 className="font-semibold text-slate-900">February 25, 2026</h3>
                 <p className="text-sm text-slate-600">Research Forum Day - Present your work!</p>
               </div>
             </div>

@@ -310,7 +310,7 @@ export default function MultiStepSubmitPage() {
             <span className="text-sm font-medium text-slate-900">Submit Abstract</span>
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            NEOMED Research Forum 2025
+            NEOMED Research Forum 2026
           </h1>
           <p className="text-slate-600">
             Step {currentStep} of {totalSteps}: {steps[currentStep - 1].description}

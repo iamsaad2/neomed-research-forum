@@ -293,7 +293,7 @@ export default function ReviewerDashboardPage() {
           <p className="text-purple-700">
             You've completed <strong>{reviewerInfo?.totalReviews || reviewedCount}</strong> review
             {(reviewerInfo?.totalReviews || reviewedCount) !== 1 ? "s" : ""} total. Thank you for
-            contributing to NEOMED Research Forum 2025!
+            contributing to NEOMED Research Forum 2026!
           </p>
         </div>
       </div>

@@ -61,7 +61,7 @@ export default function ReviewerLoginPage() {
             Reviewer Login
           </h1>
           <p className="text-slate-600">
-            NEOMED Research Forum 2025
+            NEOMED Research Forum 2026
           </p>
         </div>
 
