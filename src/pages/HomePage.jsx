@@ -170,7 +170,7 @@ export default function HomePage() {
             Ready to Share Your Research?
           </h2>
           <p className="text-lg text-slate-600 mb-8">
-            Join fellow researchers and clinicians in advancing medical knowledge at NEOMED's Research Forum 2026.
+            Join fellow clinicians and researchers in advancing medical knowledge at NEOMED's Research Forum 2026.
           </p>
           <Link 
             to="/submit"
