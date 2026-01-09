@@ -55,7 +55,7 @@ export default function ReviewerLoginPage() {
             Reviewer Portal
           </h1>
           <p className="text-xl text-white/80 leading-relaxed mb-12">
-            Help shape the future of medical research by evaluating abstract submissions for this year's forum.
+            Review abstracts here for the 2026 Neomed Research Forum
           </p>
 
           <div className="space-y-6">
