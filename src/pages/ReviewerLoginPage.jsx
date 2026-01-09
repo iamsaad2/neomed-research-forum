@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { UserCheck, Lock, Mail, User, AlertCircle } from "lucide-react";
+import { Lock, Mail, User, AlertCircle, ArrowRight } from "lucide-react";
 
 export default function ReviewerLoginPage() {
   const navigate = useNavigate();
@@ -32,11 +32,8 @@ export default function ReviewerLoginPage() {
       const data = await response.json();
 
       if (data.success) {
-        // Store token and reviewer info
         localStorage.setItem("reviewerToken", data.token);
         localStorage.setItem("reviewerInfo", JSON.stringify(data.reviewer));
-
-        // Redirect to reviewer dashboard
         navigate("/reviewer/dashboard");
       } else {
         setError(data.message || "Login failed");
@@ -50,57 +47,104 @@ export default function ReviewerLoginPage() {
   };
 
   return (
-    <div className="min-h-screen py-16 bg-gradient-to-b from-slate-50 to-white">
-      <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
-            <UserCheck className="w-8 h-8 text-purple-600" />
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            Reviewer Login
+    <div className="h-[calc(100vh-64px)] bg-slate-50 flex overflow-hidden">
+      {/* Left Side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#004963] to-[#0099CC] p-12 flex-col justify-center">
+        <div>
+          <h1 className="text-4xl font-bold text-white mb-4">
+            Reviewer Portal
           </h1>
-          <p className="text-slate-600">
-            NEOMED Research Forum 2026
+          <p className="text-xl text-white/80 leading-relaxed mb-12">
+            Help shape the future of medical research by evaluating abstract submissions for this year's forum.
           </p>
-        </div>
 
-        {/* Info Box */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="flex items-start">
-            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5 mr-3" />
-            <div className="text-sm text-blue-900">
-              <p className="font-semibold mb-1">First time reviewing?</p>
-              <p>
-                Enter your name and email, then use the shared password provided
-                by the Research Forum Committee to create your reviewer account.
-              </p>
+          <div className="space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-semibold">1</span>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-1">Review Abstracts</h3>
+                <p className="text-white/70 text-sm">Score submissions using our 5-criteria rubric</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-semibold">2</span>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-1">Provide Feedback</h3>
+                <p className="text-white/70 text-sm">Help authors improve their research presentation</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-semibold">3</span>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-1">Shape the Forum</h3>
+                <p className="text-white/70 text-sm">Your scores help select presentations</p>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Login Form */}
-        <div className="bg-white border border-slate-200 rounded-lg p-8 shadow-sm">
+      {/* Right Side - Login Form */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          {/* Mobile Header */}
+          <div className="lg:hidden text-center mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              Reviewer Portal
+            </h2>
+          </div>
+
+          <div className="text-center mb-8 hidden lg:block">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              Sign In
+            </h2>
+            <p className="text-slate-500">
+              Enter your details to access the review portal
+            </p>
+          </div>
+
+          {/* Info Box */}
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
+            <div className="flex gap-3">
+              <AlertCircle className="w-5 h-5 text-[#0077AA] flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-slate-700">
+                <p className="font-medium text-slate-900 mb-1">First time?</p>
+                <p>Use your name, email, and the shared password provided by the Research Forum Committee.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-900 text-sm">
-              {error}
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+              <div className="flex items-center gap-3 text-red-700 text-sm">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                {error}
+              </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Full Name *
+                Full Name
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-[#0099CC] focus:ring-2 focus:ring-[#0099CC]/20 focus:outline-none transition-all"
                   placeholder="Dr. Jane Smith"
                   required
                 />
@@ -109,18 +153,18 @@ export default function ReviewerLoginPage() {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Email Address *
+                Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:border-purple-500 focus:outline-none"
-                  placeholder="reviewer@neomed.edu"
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-[#0099CC] focus:ring-2 focus:ring-[#0099CC]/20 focus:outline-none transition-all"
+                  placeholder="jsmith@neomed.edu"
                   required
                 />
               </div>
@@ -128,56 +172,61 @@ export default function ReviewerLoginPage() {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Password *
+                Reviewer Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="password"
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-[#0099CC] focus:ring-2 focus:ring-[#0099CC]/20 focus:outline-none transition-all"
                   placeholder="Enter reviewer password"
                   required
                 />
               </div>
-              <p className="mt-2 text-sm text-slate-500">
-                Contact the Research Forum Committee if you don't have the password
+              <p className="mt-2 text-xs text-slate-500">
+                Contact the committee if you don't have the password
               </p>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors ${
+              className={`w-full py-3.5 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
                 isLoading
-                  ? "bg-slate-400 cursor-not-allowed"
-                  : "bg-purple-600 hover:bg-purple-700"
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-[#0077AA] text-white hover:bg-[#005F89] shadow-lg shadow-[#0077AA]/25"
               }`}
             >
               {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Signing In...
-                </span>
+                </>
               ) : (
-                "Sign In as Reviewer"
+                <>
+                  Sign In
+                  <ArrowRight className="w-5 h-5" />
+                </>
               )}
             </button>
           </form>
-        </div>
 
-        {/* Footer */}
-        <div className="mt-6 text-center text-sm text-slate-600">
-          Not a reviewer?{" "}
-          <button
-            onClick={() => navigate("/")}
-            className="text-purple-600 hover:text-purple-700 font-medium"
-          >
-            Go to Home
-          </button>
+          {/* Footer Link */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-slate-500">
+              Not a reviewer?{" "}
+              <button
+                onClick={() => navigate("/")}
+                className="text-[#0077AA] hover:text-[#005F89] font-medium"
+              >
+                Return to Home
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>

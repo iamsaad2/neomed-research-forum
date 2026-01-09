@@ -2,12 +2,85 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
-  Star,
   CheckCircle,
   FileText,
   Send,
   AlertCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
+
+// Rubric criteria definitions
+const RUBRIC_CRITERIA = [
+  {
+    id: "background",
+    title: "Background & Objective",
+    description: "Clarity of background, identified gap, and objective or hypothesis.",
+    levels: [
+      { score: 5, label: "Excellent", description: "Very clear and concise background, specific gap, and focused objective or hypothesis that is clearly relevant." },
+      { score: 4, label: "Good", description: "Clear background and objective; gap is present but could be sharper or more concise." },
+      { score: 3, label: "Satisfactory", description: "Background and objective are present but somewhat vague, generic, or loosely connected to a gap." },
+      { score: 2, label: "Weak", description: "Background and/or objective are confusing, incomplete, or minimally related to a clear question." },
+      { score: 1, label: "Poor", description: "No clear background or objective; relevance is hard to determine." },
+    ],
+  },
+  {
+    id: "methods",
+    title: "Study Design & Methods",
+    description: "Appropriateness and clarity of study design, data source, variables, and analysis.",
+    levels: [
+      { score: 5, label: "Excellent", description: "Design clearly described and appropriate; population/data source, key variables, and analysis are well specified and feasible." },
+      { score: 4, label: "Good", description: "Design and methods mostly clear and appropriate; only minor details are missing." },
+      { score: 3, label: "Satisfactory", description: "Methods described but incomplete or somewhat vague; generally appropriate but important pieces are underdeveloped." },
+      { score: 2, label: "Weak", description: "Methods hard to follow, missing key elements, or only loosely aligned with the objective." },
+      { score: 1, label: "Poor", description: "Methods absent or clearly inappropriate." },
+    ],
+  },
+  {
+    id: "results",
+    title: "Results",
+    description: "Quality and clarity of reported results.",
+    levels: [
+      { score: 5, label: "Excellent", description: "Key findings clearly presented with appropriate numbers or themes; results directly address the objective and can be understood from the abstract alone." },
+      { score: 4, label: "Good", description: "Main findings presented and generally clear, but some detail is limited." },
+      { score: 3, label: "Satisfactory", description: "Results present but somewhat incomplete, descriptive, or only partially linked to the objective." },
+      { score: 2, label: "Weak", description: "Results minimal, vague, or difficult to interpret; little evidence that the analysis is complete." },
+      { score: 1, label: "Poor", description: "No real results presented." },
+    ],
+  },
+  {
+    id: "conclusions",
+    title: "Conclusions",
+    description: "Extent to which conclusions follow from results and state clear take-home messages.",
+    levels: [
+      { score: 5, label: "Excellent", description: "Conclusions clearly supported by the results and state specific, realistic take-home messages." },
+      { score: 4, label: "Good", description: "Conclusions mostly supported by results and offer reasonable take-home points, with minor overstatement or vagueness." },
+      { score: 3, label: "Satisfactory", description: "Conclusions are general, mainly restate results, or only lightly touch on meaning." },
+      { score: 2, label: "Weak", description: "Conclusions unclear, weakly supported by results, or substantially overstate what the data show." },
+      { score: 1, label: "Poor", description: "Conclusions missing, unrelated to results, or clearly inappropriate." },
+    ],
+  },
+  {
+    id: "originality",
+    title: "Originality & Writing Quality",
+    description: "Novelty of the work and clarity of writing (organization, grammar, spelling).",
+    levels: [
+      { score: 5, label: "Excellent", description: "Clearly original or addresses an important gap; writing is very clear, well organized, and free of noticeable grammar or spelling errors." },
+      { score: 4, label: "Good", description: "Shows some originality or important application; writing is generally clear and well organized with only minor language issues." },
+      { score: 3, label: "Satisfactory", description: "Incremental or modestly original; writing is understandable but may be dense or awkward, with several minor errors." },
+      { score: 2, label: "Weak", description: "Limited originality or importance; writing is confusing or poorly organized with frequent grammar or spelling issues." },
+      { score: 1, label: "Poor", description: "Little or no originality; writing is very hard to follow due to organization or language problems." },
+    ],
+  },
+];
+
+const SCORE_LABELS = {
+  1: "Poor",
+  2: "Weak", 
+  3: "Satisfactory",
+  4: "Good",
+  5: "Excellent"
+};
 
 export default function ReviewAbstractPage() {
   const { abstractId } = useParams();
@@ -15,10 +88,18 @@ export default function ReviewAbstractPage() {
   const [abstract, setAbstract] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [score, setScore] = useState(0);
+  const [scores, setScores] = useState({
+    background: 0,
+    methods: 0,
+    results: 0,
+    conclusions: 0,
+    originality: 0,
+  });
+  const [previousReview, setPreviousReview] = useState(null);
   const [comments, setComments] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [expandedCriterion, setExpandedCriterion] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("reviewerToken");
@@ -28,6 +109,7 @@ export default function ReviewAbstractPage() {
     }
 
     fetchAbstract(token);
+    fetchMyReview(token);
   }, [abstractId, navigate]);
 
   const fetchAbstract = async (token) => {
@@ -59,11 +141,53 @@ export default function ReviewAbstractPage() {
     }
   };
 
+  const fetchMyReview = async (token) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/reviewers/my-reviews`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        const myReview = data.data.find((r) => r.abstractId === abstractId);
+        if (myReview) {
+          setPreviousReview(myReview);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching my reviews:", err);
+    }
+  };
+
+  const handleScoreChange = (criterionId, score) => {
+    setScores((prev) => ({
+      ...prev,
+      [criterionId]: score,
+    }));
+  };
+
+  const getTotalScore = () => {
+    const values = Object.values(scores);
+    const validScores = values.filter((s) => s > 0);
+    if (validScores.length === 0) return 0;
+    return validScores.reduce((a, b) => a + b, 0) / 5;
+  };
+
+  const allScoresSelected = () => {
+    return Object.values(scores).every((s) => s >= 1 && s <= 5);
+  };
+
   const handleSubmitReview = async (e) => {
     e.preventDefault();
 
-    if (score < 1 || score > 10) {
-      setError("Please select a score between 1 and 10");
+    if (!allScoresSelected()) {
+      setError("Please score all 5 criteria before submitting");
       return;
     }
 
@@ -80,7 +204,7 @@ export default function ReviewAbstractPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ score, comments }),
+          body: JSON.stringify({ scores, comments }),
         }
       );
 
@@ -132,11 +256,11 @@ export default function ReviewAbstractPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen py-16 bg-gradient-to-b from-slate-50 to-white">
+      <div className="min-h-screen py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="inline-block w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-slate-600">Loading abstract...</p>
+            <div className="inline-block w-10 h-10 border-3 border-[#0099CC] border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-slate-500">Loading abstract...</p>
           </div>
         </div>
       </div>
@@ -145,14 +269,14 @@ export default function ReviewAbstractPage() {
 
   if (error && !abstract) {
     return (
-      <div className="min-h-screen py-16 bg-gradient-to-b from-slate-50 to-white">
+      <div className="min-h-screen py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-            <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-red-900 mb-2">{error}</h2>
+          <div className="bg-white border border-red-200 rounded-xl p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">{error}</h2>
             <button
               onClick={() => navigate("/reviewer/dashboard")}
-              className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              className="mt-4 px-5 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
             >
               Back to Dashboard
             </button>
@@ -164,17 +288,17 @@ export default function ReviewAbstractPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen py-16 bg-gradient-to-b from-slate-50 to-white">
+      <div className="min-h-screen py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
-            <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-green-900 mb-2">
-              Review Submitted Successfully!
+          <div className="bg-white border border-green-200 rounded-xl p-8 text-center">
+            <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+              Review Submitted
             </h2>
-            <p className="text-green-700 mb-4">
-              Thank you for reviewing this abstract.
+            <p className="text-slate-600 mb-1">
+              Total Score: <span className="font-semibold">{getTotalScore().toFixed(1)}/5</span>
             </p>
-            <p className="text-sm text-green-600">Redirecting to dashboard...</p>
+            <p className="text-sm text-slate-400">Redirecting to dashboard...</p>
           </div>
         </div>
       </div>
@@ -182,218 +306,344 @@ export default function ReviewAbstractPage() {
   }
 
   return (
-    <div className="min-h-screen py-16 bg-gradient-to-b from-slate-50 to-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-8 bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button
           onClick={() => navigate("/reviewer/dashboard")}
-          className="flex items-center text-slate-600 hover:text-slate-900 mb-6"
+          className="flex items-center text-slate-500 hover:text-slate-900 mb-6 transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Dashboard
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          <span className="text-sm font-medium">Back to Dashboard</span>
         </button>
 
-        {/* Abstract Details */}
-        <div className="bg-white border border-slate-200 rounded-lg p-8 mb-6">
-          <div className="mb-6">
-            {abstract.hasReviewed && (
-              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                <p className="text-green-800 font-medium">
-                  You have already reviewed this abstract
-                </p>
-              </div>
-            )}
-
-            <h1 className="text-3xl font-bold text-slate-900 mb-4">
-              {abstract.title}
-            </h1>
-
-            <div className="grid md:grid-cols-2 gap-4 mb-6">
-              <div>
-                <h3 className="text-sm font-medium text-slate-500 mb-2">Authors</h3>
-                <p className="text-slate-900">{abstract.authors}</p>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-slate-500 mb-2">Department</h3>
-                <p className="text-slate-900">{getDepartmentLabel(abstract.department)}</p>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-slate-500 mb-2">Category</h3>
-                <p className="text-slate-900">{getCategoryLabel(abstract.category)}</p>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-slate-500 mb-2">Reviews</h3>
-                <p className="text-slate-900 flex items-center">
-                  <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                  {abstract.reviewCount} review{abstract.reviewCount !== 1 ? "s" : ""}
-                </p>
-              </div>
-            </div>
-
-            {abstract.keywords && (
-              <div className="mb-6">
-                <h3 className="text-sm font-medium text-slate-500 mb-2">Keywords</h3>
-                <div className="flex flex-wrap gap-2">
-                  {(Array.isArray(abstract.keywords) 
-                    ? abstract.keywords 
-                    : abstract.keywords.split(",")
-                  ).map((keyword, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full"
-                    >
-                      {typeof keyword === 'string' ? keyword.trim() : keyword}
+        <div className="grid lg:grid-cols-5 gap-6 items-start">
+          {/* Main Content - Abstract Details */}
+          <div className="lg:col-span-3 lg:max-h-[calc(100vh-140px)] lg:overflow-y-auto lg:pr-2">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              {/* Header */}
+              <div className="p-6 border-b border-slate-100">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div className="flex gap-2">
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+                      {getCategoryLabel(abstract.category)}
                     </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <h3 className="text-sm font-medium text-slate-500 mb-3">Abstract</h3>
-              <div className="space-y-4">
-                {/* Check if abstractContent exists and display structured */}
-                {abstract.abstractContent?.background ? (
-                  <>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">BACKGROUND</p>
-                      <p className="text-slate-900 leading-relaxed">
-                        {abstract.abstractContent.background}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">METHODS</p>
-                      <p className="text-slate-900 leading-relaxed">
-                        {abstract.abstractContent.methods}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">RESULTS</p>
-                      <p className="text-slate-900 leading-relaxed">
-                        {abstract.abstractContent.results}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">CONCLUSION</p>
-                      <p className="text-slate-900 leading-relaxed">
-                        {abstract.abstractContent.conclusion}
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  /* Fallback to plain abstract text */
-                  <p className="text-slate-900 whitespace-pre-line leading-relaxed">
-                    {abstract.abstract}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {abstract.hasPDF && (
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <p className="text-blue-900 flex items-center">
-                    <FileText className="w-5 h-5 mr-2" />
-                    PDF attachment available
-                  </p>
-                  {abstract.pdfUrl && (
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+                      {getDepartmentLabel(abstract.department)}
+                    </span>
+                  </div>
+                  {abstract.hasPDF && abstract.pdfUrl && (
                     <a
                       href={`${import.meta.env.VITE_API_URL}${abstract.pdfUrl}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[#0077AA] hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium"
                     >
-                      <FileText className="w-4 h-4 mr-2" />
+                      <FileText className="w-4 h-4" />
                       View PDF
                     </a>
                   )}
                 </div>
+                
+                <h1 className="text-2xl font-semibold text-slate-900 leading-tight mb-3">
+                  {abstract.title}
+                </h1>
+                
+                <p className="text-slate-600">{abstract.authors}</p>
+                
+                {abstract.keywords && (
+                  <div className="flex flex-wrap gap-1.5 mt-4">
+                    {(Array.isArray(abstract.keywords)
+                      ? abstract.keywords
+                      : abstract.keywords.split(",")
+                    ).map((keyword, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 bg-blue-50 text-[#0077AA] text-xs rounded"
+                      >
+                        {typeof keyword === "string" ? keyword.trim() : keyword}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Abstract Content */}
+              <div className="p-6">
+                <div className="space-y-6">
+                  {abstract.abstractContent?.background ? (
+                    <>
+                      <div>
+                        <h3 className="text-xs font-semibold text-[#0077AA] uppercase tracking-wide mb-2">
+                          Background
+                        </h3>
+                        <p className="text-slate-700 leading-relaxed">
+                          {abstract.abstractContent.background}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-semibold text-[#0077AA] uppercase tracking-wide mb-2">
+                          Methods
+                        </h3>
+                        <p className="text-slate-700 leading-relaxed">
+                          {abstract.abstractContent.methods}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-semibold text-[#0077AA] uppercase tracking-wide mb-2">
+                          Results
+                        </h3>
+                        <p className="text-slate-700 leading-relaxed">
+                          {abstract.abstractContent.results}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-semibold text-[#0077AA] uppercase tracking-wide mb-2">
+                          Conclusion
+                        </h3>
+                        <p className="text-slate-700 leading-relaxed">
+                          {abstract.abstractContent.conclusion}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-slate-700 whitespace-pre-line leading-relaxed">
+                      {abstract.abstract}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar - Review Form or Previous Review */}
+          <div className="lg:col-span-2 lg:sticky lg:top-4 lg:max-h-[calc(100vh-140px)] lg:overflow-y-auto">
+            {/* Already Reviewed - Show Previous Scores */}
+            {(abstract.hasReviewed || previousReview) && (
+              <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <h2 className="font-semibold text-slate-900">Your Review</h2>
+                </div>
+                
+                {previousReview ? (
+                  <>
+                    <div className="mb-4">
+                      <div className="flex items-baseline justify-between mb-1">
+                        <span className="text-sm text-slate-500">Total Score</span>
+                        <span className="text-2xl font-semibold text-slate-900">
+                          {previousReview.myTotalScore?.toFixed(1) || "—"}/5
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {RUBRIC_CRITERIA.map((criterion) => (
+                        <div key={criterion.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+                          <span className="text-sm text-slate-600">{criterion.title}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-slate-900">
+                              {previousReview.myScores?.[criterion.id] || "—"}
+                            </span>
+                            <span className="text-xs text-slate-400">
+                              {SCORE_LABELS[previousReview.myScores?.[criterion.id]] || ""}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {previousReview.myComments && (
+                      <div className="mt-4 pt-4 border-t border-slate-100">
+                        <span className="text-sm text-slate-500">Your Comments</span>
+                        <p className="mt-1 text-sm text-slate-700">{previousReview.myComments}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-500">You have already submitted a review for this abstract.</p>
+                )}
+              </div>
+            )}
+
+            {/* Review Form - Only show if not reviewed */}
+            {!abstract.hasReviewed && !previousReview && (
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="p-4 border-b border-slate-100 bg-slate-50">
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-semibold text-slate-900">Your Review</h2>
+                    <div className="text-right">
+                      <span className="text-2xl font-semibold text-slate-900">
+                        {getTotalScore().toFixed(1)}
+                      </span>
+                      <span className="text-slate-400">/5</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-[#0099CC] rounded-full transition-all duration-300"
+                      style={{ width: `${(Object.values(scores).filter(s => s > 0).length / 5) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {Object.values(scores).filter(s => s > 0).length}/5 criteria scored
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmitReview} className="p-4">
+                  {/* Scoring Criteria */}
+                  <div className="space-y-3">
+                    {RUBRIC_CRITERIA.map((criterion) => (
+                      <div
+                        key={criterion.id}
+                        className="border border-slate-200 rounded-lg overflow-hidden"
+                      >
+                        {/* Criterion Header */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedCriterion(
+                              expandedCriterion === criterion.id ? null : criterion.id
+                            )
+                          }
+                          className="w-full p-3 text-left hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-sm font-medium text-slate-900 truncate">
+                                {criterion.title}
+                              </h3>
+                            </div>
+                            <div className="flex items-center gap-2 ml-2">
+                              {scores[criterion.id] > 0 && (
+                                <span className="px-2 py-0.5 bg-[#0099CC] text-white text-xs font-medium rounded">
+                                  {scores[criterion.id]} - {SCORE_LABELS[scores[criterion.id]]}
+                                </span>
+                              )}
+                              {expandedCriterion === criterion.id ? (
+                                <ChevronUp className="w-4 h-4 text-slate-400" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-slate-400" />
+                              )}
+                            </div>
+                          </div>
+                        </button>
+
+                        {/* Expanded Level Descriptions */}
+                        {expandedCriterion === criterion.id && (
+                          <div className="px-3 pb-3 border-t border-slate-100 bg-slate-50">
+                            <p className="text-xs text-slate-500 py-2">{criterion.description}</p>
+                            <div className="space-y-1.5">
+                              {criterion.levels.map((level) => (
+                                <button
+                                  key={level.score}
+                                  type="button"
+                                  onClick={() => handleScoreChange(criterion.id, level.score)}
+                                  className={`w-full p-2.5 rounded-lg text-left transition-all ${
+                                    scores[criterion.id] === level.score
+                                      ? "bg-[#0099CC] text-white"
+                                      : "bg-white border border-slate-200 hover:border-[#0099CC] text-slate-700"
+                                  }`}
+                                >
+                                  <div className="flex items-start gap-2">
+                                    <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
+                                      scores[criterion.id] === level.score
+                                        ? "bg-white/20 text-white"
+                                        : "bg-slate-100 text-slate-600"
+                                    }`}>
+                                      {level.score}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <span className="text-sm font-medium">{level.label}</span>
+                                      <p className={`text-xs mt-0.5 ${
+                                        scores[criterion.id] === level.score ? "text-white/80" : "text-slate-500"
+                                      }`}>
+                                        {level.description}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Quick Score Buttons */}
+                        {expandedCriterion !== criterion.id && (
+                          <div className="px-3 pb-3 flex gap-1.5">
+                            {[1, 2, 3, 4, 5].map((score) => (
+                              <button
+                                key={score}
+                                type="button"
+                                onClick={() => handleScoreChange(criterion.id, score)}
+                                className={`flex-1 py-2 text-sm font-medium rounded transition-all ${
+                                  scores[criterion.id] === score
+                                    ? "bg-[#0099CC] text-white"
+                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                }`}
+                              >
+                                {score}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Comments */}
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Comments <span className="text-slate-400 font-normal">(optional)</span>
+                    </label>
+                    <textarea
+                      value={comments}
+                      onChange={(e) => setComments(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] focus:outline-none text-sm resize-none"
+                      rows="3"
+                      placeholder="Feedback for the author..."
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={submitting || !allScoresSelected()}
+                    className={`w-full mt-4 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center ${
+                      submitting || !allScoresSelected()
+                        ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                        : "bg-[#0077AA] text-white hover:bg-[#005F89]"
+                    }`}
+                  >
+                    {submitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Submit Review
+                      </>
+                    )}
+                  </button>
+
+                  {!allScoresSelected() && (
+                    <p className="text-center text-xs text-slate-400 mt-2">
+                      Score all criteria to submit
+                    </p>
+                  )}
+                </form>
               </div>
             )}
           </div>
         </div>
-
-        {/* Review Form */}
-        {!abstract.hasReviewed && (
-          <div className="bg-white border border-slate-200 rounded-lg p-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Submit Your Review</h2>
-
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-900 text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmitReview} className="space-y-6">
-              {/* Score Selection */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-3">
-                  Score (1-10) *
-                </label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                    <button
-                      key={num}
-                      type="button"
-                      onClick={() => setScore(num)}
-                      className={`flex-1 py-3 text-center font-semibold rounded-lg transition-all ${
-                        score === num
-                          ? "bg-purple-600 text-white scale-110 shadow-lg"
-                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      }`}
-                    >
-                      {num}
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-2 text-sm text-slate-500">
-                  1 = Poor, 5 = Average, 10 = Excellent
-                </p>
-              </div>
-
-              {/* Comments */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Comments (Optional)
-                </label>
-                <textarea
-                  value={comments}
-                  onChange={(e) => setComments(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:border-purple-500 focus:outline-none"
-                  rows="6"
-                  placeholder="Provide feedback on methodology, clarity, significance, etc."
-                />
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={submitting || score === 0}
-                className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors flex items-center justify-center ${
-                  submitting || score === 0
-                    ? "bg-slate-400 cursor-not-allowed"
-                    : "bg-purple-600 hover:bg-purple-700"
-                }`}
-              >
-                {submitting ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5 mr-2" />
-                    Submit Review
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-        )}
       </div>
     </div>
   );
