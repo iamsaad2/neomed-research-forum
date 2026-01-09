@@ -26,41 +26,43 @@ export default function Navbar({ mobileMenuOpen, setMobileMenuOpen }) {
 
   return (
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-8">
-            <Link to="/" className="flex items-center space-x-3">
-              {/* NEOMED Logo */}
-              <img 
-                src="/neomed-logo.png" 
-                alt="NEOMED Logo" 
-                className="h-10 w-auto"
-              />
-              <div>
-                <div className="text-xl font-bold text-slate-900">NEOMED</div>
-                <div className="text-xs text-slate-600 -mt-1">Research Forum 2026</div>
-              </div>
-            </Link>
-
-            <div className="hidden md:flex space-x-6">
-              <LinkBtn to="/">Home</LinkBtn>
-              <LinkBtn to="/submit">Submit Abstract</LinkBtn>
-              <LinkBtn to="/showcase">Accepted Abstracts</LinkBtn>
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
+            <img 
+              src="/neomed-logo.png" 
+              alt="NEOMED Logo" 
+              className="h-10 w-auto"
+            />
+            <div>
+              <div className="text-xl font-bold text-slate-900">NEOMED</div>
+              <div className="text-xs text-slate-600 -mt-1">Research Forum 2026</div>
             </div>
+          </Link>
+
+          {/* Desktop Nav Links */}
+          <div className="hidden md:flex items-center space-x-6 ml-10">
+            <LinkBtn to="/">Home</LinkBtn>
+            <LinkBtn to="/submit">Submit Abstract</LinkBtn>
+            <LinkBtn to="/showcase">Accepted Abstracts</LinkBtn>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-slate-700"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
+          {/* Spacer to push mobile menu button to right */}
+          <div className="flex-1" />
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 text-slate-700"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
       </div>
 
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-slate-200">
           <div className="px-4 py-3 space-y-2">
