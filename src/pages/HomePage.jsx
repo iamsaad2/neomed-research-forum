@@ -6,6 +6,7 @@ import {
   Award,
   Users,
   FileCheck,
+  XCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -31,6 +32,12 @@ export default function HomePage() {
     return () => clearInterval(id);
   }, []);
 
+  // ==========================================
+  // SUBMISSION STATUS FLAG - Easy to toggle
+  // Set to false to reopen submissions
+  // ==========================================
+  const SUBMISSIONS_CLOSED = true;
+
   return (
     <div>
       {/* Hero Section - Professional and Clean */}
@@ -52,36 +59,47 @@ export default function HomePage() {
 
             <p className="text-xl text-slate-600 mb-10 leading-relaxed">
               Northeast Ohio Medical University's premier annual research showcase.
-              Submit your abstract to share valuable research with the medical community.
+              {SUBMISSIONS_CLOSED 
+                ? " Abstract submissions have closed. Thank you to all who submitted!"
+                : " Submit your abstract to share valuable research with the medical community."
+              }
             </p>
 
-            {/* Primary CTA */}
-            <Link 
-              to="/submit"
-              className="inline-flex items-center px-8 py-4 bg-[#0077AA] text-white font-semibold rounded-lg shadow-lg hover:bg-[#005F89] transition-colors"
-            >
-              Submit Your Abstract
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Link>
-
-            {/* Countdown Timer */}
-            <div className="mt-12 pt-12 border-t border-slate-200">
-              <p className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-4">
-                Time Remaining
-              </p>
-              <div className="grid grid-cols-3 gap-6 max-w-md mx-auto">
-                {[
-                  ["Days", timeLeft.days],
-                  ["Hours", timeLeft.hours],
-                  ["Minutes", timeLeft.minutes],
-                ].map(([label, val]) => (
-                  <div key={label} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-                    <div className="text-3xl font-bold text-slate-900 mb-1">{val}</div>
-                    <div className="text-xs font-medium text-slate-500 uppercase">{label}</div>
-                  </div>
-                ))}
+            {/* Primary CTA - Updated for closed status */}
+            {SUBMISSIONS_CLOSED ? (
+              <div className="inline-flex items-center px-8 py-4 bg-slate-400 text-white font-semibold rounded-lg cursor-not-allowed">
+                Submissions Closed
               </div>
-            </div>
+            ) : (
+              <Link 
+                to="/submit"
+                className="inline-flex items-center px-8 py-4 bg-[#0077AA] text-white font-semibold rounded-lg shadow-lg hover:bg-[#005F89] transition-colors"
+              >
+                Submit Your Abstract
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+            )}
+
+            {/* Countdown Timer - Hidden when closed */}
+            {!SUBMISSIONS_CLOSED && (
+              <div className="mt-12 pt-12 border-t border-slate-200">
+                <p className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-4">
+                  Time Remaining
+                </p>
+                <div className="grid grid-cols-3 gap-6 max-w-md mx-auto">
+                  {[
+                    ["Days", timeLeft.days],
+                    ["Hours", timeLeft.hours],
+                    ["Minutes", timeLeft.minutes],
+                  ].map(([label, val]) => (
+                    <div key={label} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+                      <div className="text-3xl font-bold text-slate-900 mb-1">{val}</div>
+                      <div className="text-xs font-medium text-slate-500 uppercase">{label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -101,14 +119,14 @@ export default function HomePage() {
                 title: "Abstract Submissions Open", 
                 description: "Submission portal opens for all researchers",
                 icon: Calendar,
-                status: "open"
+                status: "complete"
               },
               { 
                 date: "January 12, 2026", 
                 title: "Abstract Submission Deadline", 
-                description: "Submit your research abstract by 11:59 PM EST",
+                description: "Submissions are now closed",
                 icon: Clock,
-                status: "upcoming"
+                status: "deadline-passed"
               },
               { 
                 date: "January 28, 2026", 
@@ -135,26 +153,43 @@ export default function HomePage() {
               <div 
                 key={idx}
                 className={`border rounded-lg p-6 transition-all ${
-                  item.status === "open" 
-                    ? "bg-blue-50 border-blue-200 hover:border-blue-300 hover:shadow-md" 
+                  item.status === "deadline-passed"
+                    ? "bg-red-50/50 border-red-300" 
+                    : item.status === "complete"
+                    ? "bg-emerald-50/50 border-emerald-300"
                     : "bg-white border-slate-200 hover:border-[#0099CC] hover:shadow-md"
                 }`}
               >
                 <div className="flex items-start gap-4">
                   <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
-                    item.status === "open" ? "bg-blue-500" :
+                    item.status === "deadline-passed" ? "bg-red-400" :
+                    item.status === "complete" ? "bg-emerald-500" :
                     item.status === "event" ? "bg-[#0099CC]" : "bg-slate-100"
                   }`}>
                     <item.icon className={`w-6 h-6 ${
-                      item.status === "open" || item.status === "event" ? "text-white" : "text-slate-600"
+                      item.status === "deadline-passed" || item.status === "complete" || item.status === "event" 
+                        ? "text-white" 
+                        : "text-slate-600"
                     }`} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-baseline justify-between mb-2">
-                      <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
-                      <span className="text-sm font-medium text-slate-500">{item.date}</span>
+                      <h3 className={`text-lg font-bold ${
+                        item.status === "deadline-passed" ? "text-red-800" : "text-slate-900"
+                      }`}>
+                        {item.title}
+                      </h3>
+                      <span className={`text-sm font-medium ${
+                        item.status === "deadline-passed" ? "text-red-600" : "text-slate-500"
+                      }`}>
+                        {item.date}
+                      </span>
                     </div>
-                    <p className="text-slate-600">{item.description}</p>
+                    <p className={
+                      item.status === "deadline-passed" ? "text-red-700" : "text-slate-600"
+                    }>
+                      {item.description}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -163,22 +198,39 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Call to Action */}
+      {/* Call to Action - Updated for closed status */}
       <section className="py-20 bg-slate-50 border-t border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">
-            Ready to Share Your Research?
-          </h2>
-          <p className="text-lg text-slate-600 mb-8">
-            Join fellow clinicians and researchers in advancing medical knowledge at NEOMED's Research Forum 2026.
-          </p>
-          <Link 
-            to="/submit"
-            className="inline-flex items-center px-8 py-4 bg-[#0077AA] text-white font-semibold rounded-lg shadow-lg hover:bg-[#005F89] transition-colors"
-          >
-            Submit Your Abstract
-            <ArrowRight className="ml-2 w-5 h-5" />
-          </Link>
+          {SUBMISSIONS_CLOSED ? (
+            <>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">
+                Thank You for Your Submissions!
+              </h2>
+              <p className="text-lg text-slate-600 mb-8">
+                Abstract submissions have closed. The review committee is now evaluating all submissions.
+                Authors will be notified of decisions by January 28, 2026.
+              </p>
+              <div className="inline-flex items-center px-6 py-3 bg-slate-200 text-slate-600 font-medium rounded-lg">
+                Review Period in Progress
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">
+                Ready to Share Your Research?
+              </h2>
+              <p className="text-lg text-slate-600 mb-8">
+                Join fellow clinicians and researchers in advancing medical knowledge at NEOMED's Research Forum 2026.
+              </p>
+              <Link 
+                to="/submit"
+                className="inline-flex items-center px-8 py-4 bg-[#0077AA] text-white font-semibold rounded-lg shadow-lg hover:bg-[#005F89] transition-colors"
+              >
+                Submit Your Abstract
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+            </>
+          )}
         </div>
       </section>
     </div>

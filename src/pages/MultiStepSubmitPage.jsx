@@ -1,7 +1,13 @@
 import { useState } from "react";
-import { FileText, ChevronRight, ChevronLeft, Upload, CheckCircle, X, Plus, Trash2 } from "lucide-react";
+import { FileText, ChevronRight, ChevronLeft, Upload, CheckCircle, X, Plus, Trash2, XCircle, Calendar, Mail } from "lucide-react";
 import { abstractAPI } from "../services/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+
+// ==========================================
+// SUBMISSION STATUS FLAG - Easy to toggle
+// Set to false to reopen submissions
+// ==========================================
+const SUBMISSIONS_CLOSED = true;
 
 export default function MultiStepSubmitPage() {
   const navigate = useNavigate();
@@ -23,8 +29,8 @@ export default function MultiStepSubmitPage() {
     abstractContent: {
       background: "",
       methods: "",
-      results: "",
       conclusion: "",
+      results: "",
     },
   });
   
@@ -47,6 +53,121 @@ export default function MultiStepSubmitPage() {
   ];
 
   const degrees = ["BS","BA","MD", "DO", "PhD", "MD/PhD", "MS", "Other"];
+
+  // ==========================================
+  // SUBMISSIONS CLOSED - Show closed message
+  // ==========================================
+  if (SUBMISSIONS_CLOSED) {
+    return (
+      <div className="min-h-screen py-16 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Closed Banner */}
+          <div className="bg-white border-2 border-red-300 rounded-2xl shadow-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-red-50 border-b border-red-200 p-6">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <XCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-red-900">Submissions Closed</h1>
+                  <p className="text-red-700">Abstract submission deadline has passed</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <p className="text-lg text-slate-700 mb-4">
+                  The abstract submission period for NEOMED Research Forum 2026 ended on{" "}
+                  <span className="font-semibold text-red-700">January 12, 2026 at 11:59 PM EST</span>.
+                </p>
+                <p className="text-slate-600">
+                  Thank you to everyone who submitted their research abstracts. The review committee
+                  is now evaluating all submissions.
+                </p>
+              </div>
+
+              {/* Timeline */}
+              <div className="bg-slate-50 rounded-xl p-6 mb-8">
+                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-[#0099CC]" />
+                  What Happens Next?
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-amber-500 rounded-full mt-2"></div>
+                    <div>
+                      <p className="font-medium text-slate-900">Review Period</p>
+                      <p className="text-sm text-slate-600">January 13 - 28, 2026</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-slate-300 rounded-full mt-2"></div>
+                    <div>
+                      <p className="font-medium text-slate-900">Acceptance Notifications</p>
+                      <p className="text-sm text-slate-600">January 28, 2026</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-slate-300 rounded-full mt-2"></div>
+                    <div>
+                      <p className="font-medium text-slate-900">Final Slides Due</p>
+                      <p className="text-sm text-slate-600">February 18, 2026</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-slate-300 rounded-full mt-2"></div>
+                    <div>
+                      <p className="font-medium text-slate-900">Research Forum Day</p>
+                      <p className="text-sm text-slate-600">February 25, 2026</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Already Submitted? */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <p className="text-sm text-blue-900">
+                  <span className="font-semibold">Already submitted?</span> Check your email for your
+                  unique tracking link to view your submission status, or contact us if you need assistance.
+                </p>
+              </div>
+
+              {/* Contact */}
+              <div className="text-center">
+                <p className="text-slate-600 mb-4">
+                  Questions? Contact the Research Forum Committee:
+                </p>
+                <a
+                  href="mailto:sbadat@neomed.edu"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#0099CC] text-white rounded-lg hover:bg-[#0077AA] transition-colors"
+                >
+                  <Mail className="w-4 h-4" />
+                  sbadat@neomed.edu
+                </a>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-slate-50 border-t border-slate-200 p-4">
+              <Link
+                to="/"
+                className="block w-full text-center px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Return to Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // NORMAL SUBMISSION FORM (when open)
+  // ==========================================
 
   // Author management
   const addAuthor = () => {
@@ -216,55 +337,42 @@ export default function MultiStepSubmitPage() {
     setErrors({});
 
     try {
-      const formDataToSend = new FormData();
-      
-      // Basic info
-      formDataToSend.append("title", formData.title);
-      
-      // Primary author - send as nested fields (NOT as JSON string)
-      formDataToSend.append("primaryAuthor[firstName]", formData.primaryAuthor.firstName);
-      formDataToSend.append("primaryAuthor[lastName]", formData.primaryAuthor.lastName);
-      formDataToSend.append("primaryAuthor[degree]", formData.primaryAuthor.degree);
-      formDataToSend.append("primaryAuthor[email]", formData.primaryAuthor.email);
-      
-      // Additional authors - send as JSON string (backend expects this)
-      if (formData.additionalAuthors.length > 0) {
-        formDataToSend.append("additionalAuthors", JSON.stringify(formData.additionalAuthors));
-      } else {
-        formDataToSend.append("additionalAuthors", JSON.stringify([]));
-      }
-      
-      // Department
-      formDataToSend.append("department", formData.department);
-      if (formData.department === "other") {
-        formDataToSend.append("departmentOther", formData.departmentOther);
-      }
-      
-      // Category
-      formDataToSend.append("category", formData.category);
-      
-      // Keywords
-      formDataToSend.append("keywords", JSON.stringify(keywords));
-      
-      // Abstract content - send as nested fields
-      formDataToSend.append("abstractContent[background]", formData.abstractContent.background);
-      formDataToSend.append("abstractContent[methods]", formData.abstractContent.methods);
-      formDataToSend.append("abstractContent[results]", formData.abstractContent.results);
-      formDataToSend.append("abstractContent[conclusion]", formData.abstractContent.conclusion);
-      
-      // PDF file
-      formDataToSend.append("pdfFile", pdfFile);
+      // Format authors string
+      const primaryAuthorStr = `${formData.primaryAuthor.lastName} ${formData.primaryAuthor.firstName.charAt(0)}, ${formData.primaryAuthor.degree}`;
+      const additionalAuthorsStr = formData.additionalAuthors
+        .map((a) => `${a.lastName} ${a.firstName.charAt(0)}, ${a.degree}`)
+        .join("; ");
+      const allAuthors = additionalAuthorsStr
+        ? `${primaryAuthorStr}; ${additionalAuthorsStr}`
+        : primaryAuthorStr;
 
-      console.log("📤 Submitting abstract...");
-      const response = await abstractAPI.submit(formDataToSend);
-      console.log("📥 Response:", response);
+      // Create FormData
+      const submitData = new FormData();
+      submitData.append("title", formData.title);
+      submitData.append("authors", allAuthors);
+      submitData.append("email", formData.primaryAuthor.email);
+      submitData.append("department", formData.department);
+      submitData.append("departmentOther", formData.departmentOther);
+      submitData.append("category", formData.category);
+      submitData.append("keywords", keywords.join(", "));
+      submitData.append("abstractContent", JSON.stringify(formData.abstractContent));
+
+      // Full abstract text
+      const fullAbstract = `Background: ${formData.abstractContent.background}\n\nMethods: ${formData.abstractContent.methods}\n\nResults: ${formData.abstractContent.results}\n\nConclusion: ${formData.abstractContent.conclusion}`;
+      submitData.append("abstract", fullAbstract);
+
+      if (pdfFile) {
+        submitData.append("pdfFile", pdfFile);
+      }
+
+      const response = await abstractAPI.submit(submitData);
 
       if (response.success) {
-        console.log("✅ Success! Redirecting to thank you page...");
-        navigate(`/thank-you/${response.data.viewToken}`);
+        // Navigate to thank you page with the token
+        navigate(`/thank-you/${response.data.token}`);
       }
     } catch (error) {
-      console.error("❌ Submission error:", error);
+      console.error("Submission error:", error);
       setErrors({ submit: error.message || "Failed to submit. Please try again." });
     } finally {
       setIsSubmitting(false);
@@ -273,18 +381,23 @@ export default function MultiStepSubmitPage() {
 
   const getDepartmentLabel = (dept) => {
     const map = {
-      cardiology: "Cardiology",
-      neurology: "Neurology",
-      oncology: "Oncology",
-      pediatrics: "Pediatrics",
-      internal: "Internal Medicine",
+      im: "Internal Medicine",
+      fm: "Family Medicine",
+      peds: "Pediatrics",
+      obgyn: "OB/GYN",
       surgery: "Surgery",
-      psychiatry: "Psychiatry",
-      radiology: "Radiology",
-      pathology: "Pathology",
-      emergency: "Emergency Medicine",
-      anesthesiology: "Anesthesiology",
-      dermatology: "Dermatology",
+      psych: "Psychiatry",
+      neuro: "Neurology",
+      em: "Emergency Medicine",
+      path: "Pathology",
+      radio: "Radiology",
+      anes: "Anesthesiology",
+      derm: "Dermatology",
+      ophtho: "Ophthalmology",
+      ent: "ENT",
+      uro: "Urology",
+      ortho: "Orthopedics",
+      pm: "Physical Medicine",
       other: "Other",
     };
     return map[dept] || dept;
@@ -296,108 +409,120 @@ export default function MultiStepSubmitPage() {
       education: "Medical Education",
       basic: "Basic Science",
       public: "Public Health",
+      qi: "Quality Improvement",
+      case: "Case Report",
     };
     return map[cat] || cat;
   };
 
   return (
-    <div className="min-h-screen py-16 bg-gradient-to-b from-slate-50 to-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 bg-gradient-to-b from-slate-50 to-white">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-full mb-6">
+          <div className="inline-flex items-center px-4 py-2 bg-[#E6F4F9] border border-[#B3DFF0] rounded-full mb-4">
             <FileText className="w-4 h-4 mr-2 text-[#0099CC]" />
-            <span className="text-sm font-medium text-slate-900">Submit Abstract</span>
+            <span className="text-sm font-medium text-[#006688]">Abstract Submission</span>
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            NEOMED Research Forum 2026
-          </h1>
-          <p className="text-slate-600">
-            Step {currentStep} of {totalSteps}: {steps[currentStep - 1].description}
-          </p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Submit Your Research</h1>
+          <p className="text-slate-600">NEOMED Research Forum 2026</p>
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Steps */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between">
             {steps.map((step, idx) => (
-              <div key={step.number} className="flex items-center flex-1">
-                <div
-                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                    currentStep >= step.number
-                      ? "bg-[#0099CC] border-[#0099CC] text-white"
-                      : "bg-white border-slate-300 text-slate-400"
-                  }`}
-                >
-                  {currentStep > step.number ? (
-                    <CheckCircle className="w-6 h-6" />
-                  ) : (
-                    <span className="font-semibold text-sm">{step.number}</span>
-                  )}
+              <div key={step.number} className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
+                      currentStep > step.number
+                        ? "bg-green-500 text-white"
+                        : currentStep === step.number
+                        ? "bg-[#0099CC] text-white ring-4 ring-[#0099CC]/20"
+                        : "bg-slate-200 text-slate-500"
+                    }`}
+                  >
+                    {currentStep > step.number ? (
+                      <CheckCircle className="w-5 h-5" />
+                    ) : (
+                      step.number
+                    )}
+                  </div>
+                  <span
+                    className={`text-xs mt-2 font-medium hidden sm:block ${
+                      currentStep >= step.number ? "text-slate-900" : "text-slate-400"
+                    }`}
+                  >
+                    {step.title}
+                  </span>
                 </div>
                 {idx < steps.length - 1 && (
                   <div
-                    className={`flex-1 h-1 mx-2 ${
-                      currentStep > step.number ? "bg-[#0099CC]" : "bg-slate-200"
+                    className={`w-full h-1 mx-2 rounded ${
+                      currentStep > step.number ? "bg-green-500" : "bg-slate-200"
                     }`}
+                    style={{ minWidth: "20px", maxWidth: "60px" }}
                   />
                 )}
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between text-xs text-slate-600 px-1">
-            {steps.map((step) => (
-              <div key={step.number} className="text-center" style={{ width: "80px" }}>
-                {step.title}
               </div>
             ))}
           </div>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white border border-slate-200 rounded-lg p-8 shadow-sm">
-          
+        <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
           {/* Step 1: Title */}
           {currentStep === 1 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">Abstract Title</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Abstract Title</h2>
+              <p className="text-slate-600 mb-6">
+                Enter a clear, descriptive title for your research abstract.
+              </p>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Title *
+                  Title <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                    errors.title
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-[#0099CC]"
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] resize-none ${
+                    errors.title ? "border-red-300 bg-red-50" : "border-slate-300"
                   }`}
-                  placeholder="Enter your abstract title"
+                  rows="3"
+                  placeholder="Enter your abstract title..."
                 />
-                {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+                {errors.title && (
+                  <p className="mt-2 text-sm text-red-600">{errors.title}</p>
+                )}
+                <p className="mt-2 text-sm text-slate-500">
+                  Keep it concise but descriptive. Avoid abbreviations when possible.
+                </p>
               </div>
             </div>
           )}
 
           {/* Step 2: Authors */}
           {currentStep === 2 && (
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">Authors</h2>
-                <p className="text-slate-600 mb-6">Primary author will receive all correspondence</p>
-              </div>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Authors</h2>
+              <p className="text-slate-600 mb-6">
+                Enter the primary (presenting) author and any additional authors.
+              </p>
 
               {/* Primary Author */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-slate-900 mb-4">Primary Author *</h3>
-                
+              <div className="bg-[#E6F4F9] border border-[#B3DFF0] rounded-lg p-5 mb-6">
+                <h3 className="font-semibold text-[#006688] mb-4 flex items-center">
+                  <span className="w-6 h-6 bg-[#0099CC] text-white rounded-full text-xs flex items-center justify-center mr-2">
+                    1
+                  </span>
+                  Primary Author (Presenter)
+                </h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      First Name *
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      First Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -408,21 +533,18 @@ export default function MultiStepSubmitPage() {
                           primaryAuthor: { ...formData.primaryAuthor, firstName: e.target.value },
                         })
                       }
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                        errors.primaryFirstName
-                          ? "border-red-300 focus:border-red-500"
-                          : "border-slate-300 focus:border-[#0099CC]"
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] ${
+                        errors.primaryFirstName ? "border-red-300 bg-red-50" : "border-slate-300"
                       }`}
-                      placeholder="John"
+                      placeholder="First name"
                     />
                     {errors.primaryFirstName && (
                       <p className="mt-1 text-sm text-red-600">{errors.primaryFirstName}</p>
                     )}
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Last Name *
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Last Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -433,21 +555,18 @@ export default function MultiStepSubmitPage() {
                           primaryAuthor: { ...formData.primaryAuthor, lastName: e.target.value },
                         })
                       }
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                        errors.primaryLastName
-                          ? "border-red-300 focus:border-red-500"
-                          : "border-slate-300 focus:border-[#0099CC]"
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] ${
+                        errors.primaryLastName ? "border-red-300 bg-red-50" : "border-slate-300"
                       }`}
-                      placeholder="Doe"
+                      placeholder="Last name"
                     />
                     {errors.primaryLastName && (
                       <p className="mt-1 text-sm text-red-600">{errors.primaryLastName}</p>
                     )}
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Terminal Degree *
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Degree <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={formData.primaryAuthor.degree}
@@ -457,16 +576,14 @@ export default function MultiStepSubmitPage() {
                           primaryAuthor: { ...formData.primaryAuthor, degree: e.target.value },
                         })
                       }
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none bg-white ${
-                        errors.primaryDegree
-                          ? "border-red-300 focus:border-red-500"
-                          : "border-slate-300 focus:border-[#0099CC]"
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] bg-white ${
+                        errors.primaryDegree ? "border-red-300 bg-red-50" : "border-slate-300"
                       }`}
                     >
-                      <option value="">Select Degree</option>
-                      {degrees.map((deg) => (
-                        <option key={deg} value={deg}>
-                          {deg}
+                      <option value="">Select degree</option>
+                      {degrees.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
                         </option>
                       ))}
                     </select>
@@ -474,10 +591,9 @@ export default function MultiStepSubmitPage() {
                       <p className="mt-1 text-sm text-red-600">{errors.primaryDegree}</p>
                     )}
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Email Address *
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Email <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="email"
@@ -488,12 +604,10 @@ export default function MultiStepSubmitPage() {
                           primaryAuthor: { ...formData.primaryAuthor, email: e.target.value },
                         })
                       }
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                        errors.primaryEmail
-                          ? "border-red-300 focus:border-red-500"
-                          : "border-slate-300 focus:border-[#0099CC]"
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] ${
+                        errors.primaryEmail ? "border-red-300 bg-red-50" : "border-slate-300"
                       }`}
-                      placeholder="john.doe@neomed.edu"
+                      placeholder="email@neomed.edu"
                     />
                     {errors.primaryEmail && (
                       <p className="mt-1 text-sm text-red-600">{errors.primaryEmail}</p>
@@ -503,409 +617,335 @@ export default function MultiStepSubmitPage() {
               </div>
 
               {/* Additional Authors */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-slate-900">Additional Authors (Optional)</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-slate-900">Additional Authors</h3>
                   <button
                     type="button"
                     onClick={addAuthor}
-                    className="flex items-center px-4 py-2 bg-[#0099CC] text-white rounded-lg hover:bg-[#0077AA] transition-colors text-sm font-medium"
+                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-[#0099CC] hover:bg-[#E6F4F9] rounded-lg transition-colors"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-4 h-4 mr-1" />
                     Add Author
                   </button>
                 </div>
 
                 {formData.additionalAuthors.length === 0 ? (
-                  <div className="text-center py-8 border-2 border-dashed border-slate-300 rounded-lg">
-                    <p className="text-slate-500">No additional authors added yet</p>
-                  </div>
+                  <p className="text-sm text-slate-500 italic">
+                    No additional authors added. Click "Add Author" to include co-authors.
+                  </p>
                 ) : (
-                  <div className="space-y-4">
-                    {formData.additionalAuthors.map((author, index) => (
-                      <div
-                        key={index}
-                        className="bg-slate-50 border border-slate-200 rounded-lg p-6"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="font-semibold text-slate-900">Author {index + 1}</h4>
-                          <button
-                            type="button"
-                            onClick={() => removeAuthor(index)}
-                            className="text-red-600 hover:text-red-700 flex items-center text-sm"
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Remove
-                          </button>
+                  formData.additionalAuthors.map((author, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-slate-50 border border-slate-200 rounded-lg p-4"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-slate-600">
+                          Author {idx + 2}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeAuthor(idx)}
+                          className="text-red-500 hover:text-red-700 p-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="grid md:grid-cols-3 gap-3">
+                        <div>
+                          <input
+                            type="text"
+                            value={author.firstName}
+                            onChange={(e) => updateAuthor(idx, "firstName", e.target.value)}
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] text-sm ${
+                              errors[`additionalFirstName${idx}`]
+                                ? "border-red-300 bg-red-50"
+                                : "border-slate-300"
+                            }`}
+                            placeholder="First name"
+                          />
                         </div>
-
-                        <div className="grid md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                              First Name *
-                            </label>
-                            <input
-                              type="text"
-                              value={author.firstName}
-                              onChange={(e) => updateAuthor(index, "firstName", e.target.value)}
-                              className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                                errors[`additionalFirstName${index}`]
-                                  ? "border-red-300"
-                                  : "border-slate-300"
-                              }`}
-                              placeholder="First name"
-                            />
-                            {errors[`additionalFirstName${index}`] && (
-                              <p className="mt-1 text-sm text-red-600">
-                                {errors[`additionalFirstName${index}`]}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                              Last Name *
-                            </label>
-                            <input
-                              type="text"
-                              value={author.lastName}
-                              onChange={(e) => updateAuthor(index, "lastName", e.target.value)}
-                              className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                                errors[`additionalLastName${index}`]
-                                  ? "border-red-300"
-                                  : "border-slate-300"
-                              }`}
-                              placeholder="Last name"
-                            />
-                            {errors[`additionalLastName${index}`] && (
-                              <p className="mt-1 text-sm text-red-600">
-                                {errors[`additionalLastName${index}`]}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                              Degree *
-                            </label>
-                            <select
-                              value={author.degree}
-                              onChange={(e) => updateAuthor(index, "degree", e.target.value)}
-                              className={`w-full px-4 py-3 border rounded-lg focus:outline-none bg-white ${
-                                errors[`additionalDegree${index}`]
-                                  ? "border-red-300"
-                                  : "border-slate-300"
-                              }`}
-                            >
-                              <option value="">Select</option>
-                              {degrees.map((deg) => (
-                                <option key={deg} value={deg}>
-                                  {deg}
-                                </option>
-                              ))}
-                            </select>
-                            {errors[`additionalDegree${index}`] && (
-                              <p className="mt-1 text-sm text-red-600">
-                                {errors[`additionalDegree${index}`]}
-                              </p>
-                            )}
-                          </div>
+                        <div>
+                          <input
+                            type="text"
+                            value={author.lastName}
+                            onChange={(e) => updateAuthor(idx, "lastName", e.target.value)}
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] text-sm ${
+                              errors[`additionalLastName${idx}`]
+                                ? "border-red-300 bg-red-50"
+                                : "border-slate-300"
+                            }`}
+                            placeholder="Last name"
+                          />
+                        </div>
+                        <div>
+                          <select
+                            value={author.degree}
+                            onChange={(e) => updateAuthor(idx, "degree", e.target.value)}
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] bg-white text-sm ${
+                              errors[`additionalDegree${idx}`]
+                                ? "border-red-300 bg-red-50"
+                                : "border-slate-300"
+                            }`}
+                          >
+                            <option value="">Degree</option>
+                            {degrees.map((d) => (
+                              <option key={d} value={d}>
+                                {d}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))
                 )}
               </div>
             </div>
           )}
 
-          {/* Step 3: Department, Category, Keywords */}
+          {/* Step 3: Details */}
           {currentStep === 3 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">Research Details</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Details</h2>
+              <p className="text-slate-600 mb-6">
+                Categorize your research and add relevant keywords.
+              </p>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Department *
-                </label>
-                <select
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none bg-white ${
-                    errors.department
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-[#0099CC]"
-                  }`}
-                >
-                  <option value="">Select Department</option>
-                  <option value="cardiology">Cardiology</option>
-                  <option value="neurology">Neurology</option>
-                  <option value="oncology">Oncology</option>
-                  <option value="pediatrics">Pediatrics</option>
-                  <option value="internal">Internal Medicine</option>
-                  <option value="surgery">Surgery</option>
-                  <option value="psychiatry">Psychiatry</option>
-                  <option value="radiology">Radiology</option>
-                  <option value="pathology">Pathology</option>
-                  <option value="emergency">Emergency Medicine</option>
-                  <option value="anesthesiology">Anesthesiology</option>
-                  <option value="dermatology">Dermatology</option>
-                  <option value="other">Other</option>
-                </select>
-                {errors.department && (
-                  <p className="mt-1 text-sm text-red-600">{errors.department}</p>
-                )}
-              </div>
-
-              {formData.department === "other" && (
+              <div className="space-y-6">
+                {/* Department */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Specify Department *
+                    Department <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={formData.departmentOther}
+                  <select
+                    value={formData.department}
                     onChange={(e) =>
-                      setFormData({ ...formData, departmentOther: e.target.value })
+                      setFormData({ ...formData, department: e.target.value })
                     }
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                      errors.departmentOther
-                        ? "border-red-300 focus:border-red-500"
-                        : "border-slate-300 focus:border-[#0099CC]"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] bg-white ${
+                      errors.department ? "border-red-300 bg-red-50" : "border-slate-300"
                     }`}
-                    placeholder="Enter department name"
-                  />
-                  {errors.departmentOther && (
-                    <p className="mt-1 text-sm text-red-600">{errors.departmentOther}</p>
+                  >
+                    <option value="">Select department</option>
+                    <option value="im">Internal Medicine</option>
+                    <option value="fm">Family Medicine</option>
+                    <option value="peds">Pediatrics</option>
+                    <option value="obgyn">OB/GYN</option>
+                    <option value="surgery">Surgery</option>
+                    <option value="psych">Psychiatry</option>
+                    <option value="neuro">Neurology</option>
+                    <option value="em">Emergency Medicine</option>
+                    <option value="path">Pathology</option>
+                    <option value="radio">Radiology</option>
+                    <option value="anes">Anesthesiology</option>
+                    <option value="derm">Dermatology</option>
+                    <option value="ophtho">Ophthalmology</option>
+                    <option value="ent">ENT</option>
+                    <option value="uro">Urology</option>
+                    <option value="ortho">Orthopedics</option>
+                    <option value="pm">Physical Medicine</option>
+                    <option value="other">Other</option>
+                  </select>
+                  {errors.department && (
+                    <p className="mt-2 text-sm text-red-600">{errors.department}</p>
                   )}
                 </div>
-              )}
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Research Category *
-                </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none bg-white ${
-                    errors.category
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-[#0099CC]"
-                  }`}
-                >
-                  <option value="">Select Category</option>
-                  <option value="clinical">Clinical Research</option>
-                  <option value="education">Medical Education</option>
-                  <option value="basic">Basic Science</option>
-                  <option value="public">Public Health</option>
-                </select>
-                {errors.category && (
-                  <p className="mt-1 text-sm text-red-600">{errors.category}</p>
+                {formData.department === "other" && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Specify Department <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.departmentOther}
+                      onChange={(e) =>
+                        setFormData({ ...formData, departmentOther: e.target.value })
+                      }
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] ${
+                        errors.departmentOther ? "border-red-300 bg-red-50" : "border-slate-300"
+                      }`}
+                      placeholder="Enter department name"
+                    />
+                    {errors.departmentOther && (
+                      <p className="mt-2 text-sm text-red-600">{errors.departmentOther}</p>
+                    )}
+                  </div>
                 )}
-              </div>
 
-              {/* Keywords */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Keywords * (Add at least one)
-                </label>
-                <div className="flex gap-2 mb-3">
-                  <input
-                    type="text"
-                    value={keywordInput}
-                    onChange={(e) => setKeywordInput(e.target.value)}
-                    onKeyPress={handleKeywordKeyPress}
-                    className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:border-[#0099CC] focus:outline-none"
-                    placeholder="Enter a keyword"
-                  />
-                  <button
-                    type="button"
-                    onClick={addKeyword}
-                    className="px-6 py-3 bg-[#0099CC] text-white rounded-lg hover:bg-[#0077AA] transition-colors font-medium flex items-center"
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Research Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] bg-white ${
+                      errors.category ? "border-red-300 bg-red-50" : "border-slate-300"
+                    }`}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add
-                  </button>
+                    <option value="">Select category</option>
+                    <option value="clinical">Clinical Research</option>
+                    <option value="education">Medical Education</option>
+                    <option value="basic">Basic Science</option>
+                    <option value="public">Public Health</option>
+                    <option value="qi">Quality Improvement</option>
+                    <option value="case">Case Report</option>
+                  </select>
+                  {errors.category && (
+                    <p className="mt-2 text-sm text-red-600">{errors.category}</p>
+                  )}
                 </div>
 
-                {keywords.length > 0 ? (
-                  <div className="space-y-2">
-                    {keywords.map((keyword, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-3"
-                      >
-                        <span className="text-slate-900">
-                          <span className="font-semibold text-[#0099CC] mr-2">
-                            {index + 1}.
-                          </span>
-                          {keyword}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removeKeyword(index)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      </div>
-                    ))}
+                {/* Keywords */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Keywords <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={keywordInput}
+                      onChange={(e) => setKeywordInput(e.target.value)}
+                      onKeyPress={handleKeywordKeyPress}
+                      className={`flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] ${
+                        errors.keywords ? "border-red-300 bg-red-50" : "border-slate-300"
+                      }`}
+                      placeholder="Type a keyword and press Enter"
+                    />
+                    <button
+                      type="button"
+                      onClick={addKeyword}
+                      className="px-4 py-3 bg-[#0099CC] text-white rounded-lg hover:bg-[#0077AA] transition-colors"
+                    >
+                      Add
+                    </button>
                   </div>
-                ) : (
-                  <div className="text-center py-6 border-2 border-dashed border-slate-300 rounded-lg">
-                    <p className="text-slate-500 text-sm">No keywords added yet</p>
-                  </div>
-                )}
+                  {errors.keywords && (
+                    <p className="mt-2 text-sm text-red-600">{errors.keywords}</p>
+                  )}
 
-                {errors.keywords && (
-                  <p className="mt-2 text-sm text-red-600">{errors.keywords}</p>
-                )}
-                <p className="mt-2 text-sm text-slate-500">
-                  Enter 3-5 keywords that best describe your research
-                </p>
+                  {keywords.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {keywords.map((keyword, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center px-3 py-1 bg-[#E6F4F9] text-[#006688] text-sm rounded-full border border-[#B3DFF0]"
+                        >
+                          {keyword}
+                          <button
+                            type="button"
+                            onClick={() => removeKeyword(idx)}
+                            className="ml-2 text-[#0099CC] hover:text-red-500"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="mt-2 text-sm text-slate-500">
+                    Add 3-5 keywords that describe your research.
+                  </p>
+                </div>
               </div>
             </div>
           )}
 
           {/* Step 4: Abstract Content */}
           {currentStep === 4 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">Abstract Content</h2>
-                <p className="text-slate-600 mb-6">
-                  Please provide your abstract in the structured format below
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Background *
-                </label>
-                <textarea
-                  value={formData.abstractContent.background}
-                  onChange={(e) => handleAbstractContentChange("background", e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                    errors.background
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-[#0099CC]"
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-1">Abstract Content</h2>
+                  <p className="text-slate-600">
+                    Enter each section of your structured abstract.
+                  </p>
+                </div>
+                <div
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+                    getTotalWordCount() > MAX_WORD_COUNT * 0.9
+                      ? "bg-red-100 text-red-700"
+                      : getTotalWordCount() > MAX_WORD_COUNT * 0.75
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-green-100 text-green-700"
                   }`}
-                  rows="4"
-                  placeholder="Describe the context and rationale for your study..."
-                />
-                {errors.background && (
-                  <p className="mt-1 text-sm text-red-600">{errors.background}</p>
-                )}
-                <p className="mt-1 text-sm text-slate-500">
-                  {formData.abstractContent.background.split(" ").filter(Boolean).length} words
-                </p>
+                >
+                  {getTotalWordCount()}/{MAX_WORD_COUNT} words
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Methods *
-                </label>
-                <textarea
-                  value={formData.abstractContent.methods}
-                  onChange={(e) => handleAbstractContentChange("methods", e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                    errors.methods
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-[#0099CC]"
-                  }`}
-                  rows="4"
-                  placeholder="Describe your research methods and approach..."
-                />
-                {errors.methods && <p className="mt-1 text-sm text-red-600">{errors.methods}</p>}
-                <p className="mt-1 text-sm text-slate-500">
-                  {formData.abstractContent.methods.split(" ").filter(Boolean).length} words
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Results *
-                </label>
-                <textarea
-                  value={formData.abstractContent.results}
-                  onChange={(e) => handleAbstractContentChange("results", e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                    errors.results
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-[#0099CC]"
-                  }`}
-                  rows="4"
-                  placeholder="Present your key findings..."
-                />
-                {errors.results && <p className="mt-1 text-sm text-red-600">{errors.results}</p>}
-                <p className="mt-1 text-sm text-slate-500">
-                  {formData.abstractContent.results.split(" ").filter(Boolean).length} words
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Conclusion *
-                </label>
-                <textarea
-                  value={formData.abstractContent.conclusion}
-                  onChange={(e) => handleAbstractContentChange("conclusion", e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none ${
-                    errors.conclusion
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-slate-300 focus:border-[#0099CC]"
-                  }`}
-                  rows="4"
-                  placeholder="Summarize implications and significance..."
-                />
-                {errors.conclusion && (
-                  <p className="mt-1 text-sm text-red-600">{errors.conclusion}</p>
-                )}
-                <p className="mt-1 text-sm text-slate-500">
-                  {formData.abstractContent.conclusion.split(" ").filter(Boolean).length} words
-                </p>
-              </div>
-
-              <div className={`border rounded-lg p-4 ${
-                getTotalWordCount() >= MAX_WORD_COUNT
-                  ? "bg-red-50 border-red-200"
-                  : getTotalWordCount() >= MAX_WORD_COUNT * 0.9
-                  ? "bg-yellow-50 border-yellow-200"
-                  : "bg-blue-50 border-blue-200"
-              }`}>
-                <p className={`text-sm font-semibold ${
-                  getTotalWordCount() >= MAX_WORD_COUNT
-                    ? "text-red-900"
-                    : getTotalWordCount() >= MAX_WORD_COUNT * 0.9
-                    ? "text-yellow-900"
-                    : "text-blue-900"
-                }`}>
-                  <p>Total word count:</p>{" "}
-                  {getTotalWordCount()} / {MAX_WORD_COUNT} words
-                  {getTotalWordCount() >= MAX_WORD_COUNT && " - Word limit reached!"}
-                </p>
+              <div className="space-y-5">
+                {[
+                  {
+                    field: "background",
+                    label: "Background",
+                    placeholder:
+                      "Describe the context and rationale for your research...",
+                  },
+                  {
+                    field: "methods",
+                    label: "Methods",
+                    placeholder:
+                      "Describe your study design, participants, and procedures...",
+                  },
+                  {
+                    field: "results",
+                    label: "Results",
+                    placeholder: "Summarize your key findings and data...",
+                  },
+                  {
+                    field: "conclusion",
+                    label: "Conclusion",
+                    placeholder:
+                      "State the implications and significance of your findings...",
+                  },
+                ].map(({ field, label, placeholder }) => (
+                  <div key={field}>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      {label} <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={formData.abstractContent[field]}
+                      onChange={(e) => handleAbstractContentChange(field, e.target.value)}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099CC]/20 focus:border-[#0099CC] resize-none ${
+                        errors[field] ? "border-red-300 bg-red-50" : "border-slate-300"
+                      }`}
+                      rows="4"
+                      placeholder={placeholder}
+                    />
+                    {errors[field] && (
+                      <p className="mt-1 text-sm text-red-600">{errors[field]}</p>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
           {/* Step 5: PDF Upload */}
           {currentStep === 5 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">PDF Upload</h2>
-                <p className="text-slate-600 mb-6">Upload a PDF version of your abstract</p>
-              </div>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Upload PDF</h2>
+              <p className="text-slate-600 mb-6">
+                Upload a PDF version of your abstract (required).
+              </p>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Upload PDF * (Required)
-                </label>
+              <div className="space-y-4">
                 <div
-                  className={`border-2 border-dashed rounded-lg p-8 text-center hover:border-[#0099CC] transition-colors ${
-                    errors.pdf ? "border-red-300 bg-red-50" : "border-slate-300"
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                    pdfFile
+                      ? "border-green-300 bg-green-50"
+                      : errors.pdf
+                      ? "border-red-300 bg-red-50"
+                      : "border-slate-300 hover:border-[#0099CC]"
                   }`}
                 >
-                  <Upload className="w-12 h-12 mx-auto mb-4 text-slate-400" />
                   <input
                     type="file"
                     id="pdfFile"
@@ -913,16 +953,18 @@ export default function MultiStepSubmitPage() {
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                  <label htmlFor="pdfFile" className="cursor-pointer">
-                    <span className="text-[#0099CC] hover:text-[#0077AA] font-medium text-lg">
-                      Click to upload
-                    </span>
-                    <span className="text-slate-600"> or drag and drop</span>
-                  </label>
-                  <p className="text-sm text-slate-500 mt-2">PDF up to 10MB</p>
 
-                  {pdfFile && (
-                    <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  {!pdfFile ? (
+                    <label htmlFor="pdfFile" className="cursor-pointer">
+                      <Upload className="w-12 h-12 mx-auto mb-4 text-slate-400" />
+                      <p className="text-lg font-medium text-slate-700 mb-1">
+                        Click to upload PDF
+                      </p>
+                      <p className="text-sm text-slate-500">PDF up to 10MB</p>
+                    </label>
+                  ) : (
+                    <div>
+                      <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-500" />
                       <div className="flex items-center justify-center text-green-900">
                         <FileText className="w-5 h-5 mr-2 text-green-600" />
                         <span className="font-medium">{pdfFile.name}</span>
