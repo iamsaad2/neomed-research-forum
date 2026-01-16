@@ -8,6 +8,9 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
+  Eye,
+  EyeOff,
+  ArrowRight,
 } from "lucide-react";
 
 // Rubric criteria definitions
@@ -86,6 +89,7 @@ export default function ReviewAbstractPage() {
   const { abstractId } = useParams();
   const navigate = useNavigate();
   const [abstract, setAbstract] = useState(null);
+  const [allAbstracts, setAllAbstracts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [scores, setScores] = useState({
@@ -100,8 +104,30 @@ export default function ReviewAbstractPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [expandedCriterion, setExpandedCriterion] = useState(null);
+  const [hideAuthors, setHideAuthors] = useState(() => {
+    const saved = localStorage.getItem("hideAuthors");
+    return saved === "true";
+  });
+  const [nextPendingAbstract, setNextPendingAbstract] = useState(null);
 
+  // Reset state when abstractId changes
   useEffect(() => {
+    // Reset all form state when navigating to a new abstract
+    setScores({
+      background: 0,
+      methods: 0,
+      results: 0,
+      conclusions: 0,
+      originality: 0,
+    });
+    setPreviousReview(null);
+    setComments("");
+    setError("");
+    setSuccess(false);
+    setExpandedCriterion(null);
+    setAbstract(null);
+    setLoading(true);
+
     const token = localStorage.getItem("reviewerToken");
     if (!token) {
       navigate("/review");
@@ -110,7 +136,13 @@ export default function ReviewAbstractPage() {
 
     fetchAbstract(token);
     fetchMyReview(token);
+    fetchAllAbstracts(token);
   }, [abstractId, navigate]);
+
+  // Persist hide authors preference
+  useEffect(() => {
+    localStorage.setItem("hideAuthors", hideAuthors.toString());
+  }, [hideAuthors]);
 
   const fetchAbstract = async (token) => {
     try {
@@ -138,6 +170,32 @@ export default function ReviewAbstractPage() {
       setError("Failed to load abstract");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllAbstracts = async (token) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/reviewers/abstracts`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setAllAbstracts(data.data);
+        // Find next pending abstract (not the current one)
+        const pendingAbstracts = data.data.filter(a => !a.hasReviewed && a.id !== abstractId);
+        if (pendingAbstracts.length > 0) {
+          setNextPendingAbstract(pendingAbstracts[0]);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching all abstracts:", err);
     }
   };
 
@@ -183,6 +241,12 @@ export default function ReviewAbstractPage() {
     return Object.values(scores).every((s) => s >= 1 && s <= 5);
   };
 
+  // Mask author names
+  const maskAuthors = (authors) => {
+    if (!hideAuthors || !authors) return authors;
+    return authors.split(/[,;]/).map(() => "————").join(", ");
+  };
+
   const handleSubmitReview = async (e) => {
     e.preventDefault();
 
@@ -212,9 +276,27 @@ export default function ReviewAbstractPage() {
 
       if (data.success) {
         setSuccess(true);
+        
+        // After 1.5 seconds, navigate to next pending abstract or dashboard
         setTimeout(() => {
-          navigate("/reviewer/dashboard");
-        }, 2000);
+          // Re-fetch to get updated list
+          fetchAllAbstracts(token).then(() => {
+            // Find next pending abstract after submission
+            const pendingAbstracts = allAbstracts.filter(a => !a.hasReviewed && a.id !== abstractId);
+            if (pendingAbstracts.length > 0) {
+              navigate(`/reviewer/abstract/${pendingAbstracts[0].id}`);
+            } else {
+              navigate("/reviewer/dashboard");
+            }
+          });
+          
+          // Fallback: if we already have nextPendingAbstract, use it
+          if (nextPendingAbstract) {
+            navigate(`/reviewer/abstract/${nextPendingAbstract.id}`);
+          } else {
+            navigate("/reviewer/dashboard");
+          }
+        }, 1500);
       } else {
         setError(data.message || "Failed to submit review");
       }
@@ -287,18 +369,31 @@ export default function ReviewAbstractPage() {
   }
 
   if (success) {
+    const pendingCount = allAbstracts.filter(a => !a.hasReviewed && a.id !== abstractId).length;
+    
     return (
       <div className="min-h-screen py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white border border-green-200 rounded-xl p-8 text-center">
             <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-slate-900 mb-2">
-              Review Submitted
+              Review Submitted!
             </h2>
             <p className="text-slate-600 mb-1">
               Total Score: <span className="font-semibold">{getTotalScore().toFixed(1)}/5</span>
             </p>
-            <p className="text-sm text-slate-400">Redirecting to dashboard...</p>
+            {pendingCount > 0 ? (
+              <p className="text-sm text-slate-500 mt-3">
+                <span className="inline-flex items-center gap-1">
+                  Loading next abstract...
+                  <ArrowRight className="w-4 h-4" />
+                </span>
+              </p>
+            ) : (
+              <p className="text-sm text-slate-500 mt-3">
+                All abstracts reviewed! Returning to dashboard...
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -308,14 +403,38 @@ export default function ReviewAbstractPage() {
   return (
     <div className="min-h-screen py-8 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate("/reviewer/dashboard")}
-          className="flex items-center text-slate-500 hover:text-slate-900 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          <span className="text-sm font-medium">Back to Dashboard</span>
-        </button>
+        {/* Header with Back Button and Hide Authors Toggle */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => navigate("/reviewer/dashboard")}
+            className="flex items-center text-slate-500 hover:text-slate-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            <span className="text-sm font-medium">Back to Dashboard</span>
+          </button>
+
+          <button
+            onClick={() => setHideAuthors(!hideAuthors)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+              hideAuthors
+                ? "bg-amber-50 border-amber-300 text-amber-700"
+                : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+            }`}
+            title={hideAuthors ? "Show author names" : "Hide author names for blind review"}
+          >
+            {hideAuthors ? (
+              <>
+                <EyeOff className="w-4 h-4" />
+                <span className="text-sm font-medium">Authors Hidden</span>
+              </>
+            ) : (
+              <>
+                <Eye className="w-4 h-4" />
+                <span className="text-sm font-medium">Hide Authors</span>
+              </>
+            )}
+          </button>
+        </div>
 
         <div className="grid lg:grid-cols-5 gap-6 items-start">
           {/* Main Content - Abstract Details */}
@@ -349,7 +468,10 @@ export default function ReviewAbstractPage() {
                   {abstract.title}
                 </h1>
                 
-                <p className="text-slate-600">{abstract.authors}</p>
+                {/* Authors with hide toggle */}
+                <p className={`${hideAuthors ? "text-slate-400 italic" : "text-slate-600"}`}>
+                  {maskAuthors(abstract.authors)}
+                </p>
                 
                 {abstract.keywords && (
                   <div className="flex flex-wrap gap-1.5 mt-4">
@@ -458,6 +580,17 @@ export default function ReviewAbstractPage() {
                         <span className="text-sm text-slate-500">Your Comments</span>
                         <p className="mt-1 text-sm text-slate-700">{previousReview.myComments}</p>
                       </div>
+                    )}
+
+                    {/* Next Abstract Button */}
+                    {nextPendingAbstract && (
+                      <button
+                        onClick={() => navigate(`/reviewer/abstract/${nextPendingAbstract.id}`)}
+                        className="w-full mt-4 py-3 px-4 bg-[#0077AA] text-white rounded-lg font-medium hover:bg-[#005F89] transition-colors flex items-center justify-center gap-2"
+                      >
+                        Review Next Abstract
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
                     )}
                   </>
                 ) : (

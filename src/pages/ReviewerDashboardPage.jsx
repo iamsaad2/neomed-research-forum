@@ -7,7 +7,8 @@ import {
   LogOut,
   ChevronRight,
   Search,
-  Filter,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 export default function ReviewerDashboardPage() {
@@ -17,6 +18,11 @@ export default function ReviewerDashboardPage() {
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [reviewerInfo, setReviewerInfo] = useState(null);
+  const [hideAuthors, setHideAuthors] = useState(() => {
+    // Persist preference in localStorage
+    const saved = localStorage.getItem("hideAuthors");
+    return saved === "true";
+  });
 
   useEffect(() => {
     const token = localStorage.getItem("reviewerToken");
@@ -30,6 +36,11 @@ export default function ReviewerDashboardPage() {
     setReviewerInfo(JSON.parse(info));
     fetchAbstracts(token);
   }, [navigate]);
+
+  // Persist hide authors preference
+  useEffect(() => {
+    localStorage.setItem("hideAuthors", hideAuthors.toString());
+  }, [hideAuthors]);
 
   const fetchAbstracts = async (token) => {
     try {
@@ -57,6 +68,7 @@ export default function ReviewerDashboardPage() {
   const handleLogout = () => {
     localStorage.removeItem("reviewerToken");
     localStorage.removeItem("reviewerInfo");
+    localStorage.removeItem("hideAuthors");
     navigate("/review");
   };
 
@@ -69,7 +81,7 @@ export default function ReviewerDashboardPage() {
     const matchesSearch = 
       searchTerm === "" ? true :
       abstract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      abstract.authors.toLowerCase().includes(searchTerm.toLowerCase());
+      (!hideAuthors && abstract.authors.toLowerCase().includes(searchTerm.toLowerCase()));
     
     return matchesFilter && matchesSearch;
   });
@@ -103,6 +115,13 @@ export default function ReviewerDashboardPage() {
       public: "Public Health",
     };
     return map[cat] || cat;
+  };
+
+  // Mask author names
+  const maskAuthors = (authors) => {
+    if (!hideAuthors) return authors;
+    // Replace each author with a line
+    return authors.split(/[,;]/).map(() => "————").join(", ");
   };
 
   if (loading) {
@@ -191,10 +210,33 @@ export default function ReviewerDashboardPage() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by title or author..."
+                placeholder={hideAuthors ? "Search by title..." : "Search by title or author..."}
                 className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] focus:outline-none text-sm"
               />
             </div>
+
+            {/* Hide Authors Toggle */}
+            <button
+              onClick={() => setHideAuthors(!hideAuthors)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
+                hideAuthors
+                  ? "bg-amber-50 border-amber-300 text-amber-700"
+                  : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+              }`}
+              title={hideAuthors ? "Show author names" : "Hide author names for blind review"}
+            >
+              {hideAuthors ? (
+                <>
+                  <EyeOff className="w-4 h-4" />
+                  <span className="text-sm font-medium">Authors Hidden</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4" />
+                  <span className="text-sm font-medium">Hide Authors</span>
+                </>
+              )}
+            </button>
 
             {/* Filter Tabs */}
             <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg">
@@ -231,6 +273,16 @@ export default function ReviewerDashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Blind Review Notice */}
+        {hideAuthors && (
+          <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
+            <EyeOff className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            <p className="text-sm text-amber-800">
+              <span className="font-medium">Blind review mode enabled.</span> Author names are hidden to reduce bias. Click the eye icon to toggle.
+            </p>
+          </div>
+        )}
 
         {/* Abstracts List */}
         {filteredAbstracts.length === 0 ? (
@@ -286,7 +338,9 @@ export default function ReviewerDashboardPage() {
                     </h3>
 
                     {/* Authors */}
-                    <p className="text-sm text-slate-600 mb-3">{abstract.authors}</p>
+                    <p className={`text-sm mb-3 ${hideAuthors ? "text-slate-400 italic" : "text-slate-600"}`}>
+                      {maskAuthors(abstract.authors)}
+                    </p>
 
                     {/* Abstract Preview */}
                     <p className="text-sm text-slate-500 line-clamp-2">
