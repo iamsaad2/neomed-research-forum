@@ -16,6 +16,11 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Shuffle,
+  Settings,
+  UserCheck,
+  Lock,
+  Unlock,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -37,6 +42,13 @@ export default function AdminDashboardPage() {
   const [reviewerToDelete, setReviewerToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
+  
+  // Assignment management states
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [selectedReviewers, setSelectedReviewers] = useState([]);
+  const [abstractsPerReviewer, setAbstractsPerReviewer] = useState(18);
+  const [isRandomizing, setIsRandomizing] = useState(false);
+  const [assignmentResult, setAssignmentResult] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -104,7 +116,6 @@ export default function AdminDashboardPage() {
         setAbstracts(abstracts.map(a => 
           a.id === abstractId ? { ...a, status: "accepted", acceptedAt: new Date() } : a
         ));
-        // Update stats
         setStats(prev => ({
           ...prev,
           accepted: (prev?.accepted || 0) + 1,
@@ -137,7 +148,6 @@ export default function AdminDashboardPage() {
         setAbstracts(abstracts.map(a => 
           a.id === abstractId ? { ...a, status: "rejected" } : a
         ));
-        // Update stats
         setStats(prev => ({
           ...prev,
           rejected: (prev?.rejected || 0) + 1,
@@ -181,6 +191,120 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Toggle reviewer assignment type (all <-> limited)
+  const handleToggleAssignmentType = async (reviewerId, currentType) => {
+    const token = localStorage.getItem("adminToken");
+    const newType = currentType === 'all' ? 'limited' : 'all';
+    
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/admin/reviewers/${reviewerId}/assignment`,
+        {
+          method: "PUT",
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ assignmentType: newType }),
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        setReviewers(reviewers.map(r => 
+          r.id === reviewerId 
+            ? { ...r, assignmentType: newType, assignedAbstracts: newType === 'all' ? 0 : r.assignedAbstracts }
+            : r
+        ));
+      }
+    } catch (error) {
+      console.error("Error updating assignment type:", error);
+    }
+  };
+
+  // Clear specific reviewer's assignments
+  const handleClearAssignments = async (reviewerId) => {
+    const token = localStorage.getItem("adminToken");
+    
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/admin/reviewers/${reviewerId}/assignments`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        setReviewers(reviewers.map(r => 
+          r.id === reviewerId 
+            ? { ...r, assignmentType: 'all', assignedAbstracts: 0, assignedLimit: 0 }
+            : r
+        ));
+      }
+    } catch (error) {
+      console.error("Error clearing assignments:", error);
+    }
+  };
+
+  // Randomize assignments for selected reviewers
+  const handleRandomizeAssignments = async () => {
+    if (selectedReviewers.length === 0) return;
+    
+    setIsRandomizing(true);
+    setAssignmentResult(null);
+    
+    try {
+      const token = localStorage.getItem("adminToken");
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/admin/reviewers/randomize-assignments`,
+        {
+          method: "POST",
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ 
+            reviewerIds: selectedReviewers,
+            abstractsPerReviewer 
+          }),
+        }
+      );
+      const data = await res.json();
+      
+      if (data.success) {
+        setAssignmentResult({
+          success: true,
+          message: data.message,
+          data: data.data
+        });
+        // Refresh reviewer data
+        fetchData(token);
+        setSelectedReviewers([]);
+      } else {
+        setAssignmentResult({
+          success: false,
+          message: data.message
+        });
+      }
+    } catch (error) {
+      console.error("Error randomizing assignments:", error);
+      setAssignmentResult({
+        success: false,
+        message: error.message || "Failed to randomize assignments"
+      });
+    } finally {
+      setIsRandomizing(false);
+    }
+  };
+
+  const toggleReviewerSelection = (reviewerId) => {
+    if (selectedReviewers.includes(reviewerId)) {
+      setSelectedReviewers(selectedReviewers.filter(id => id !== reviewerId));
+    } else {
+      setSelectedReviewers([...selectedReviewers, reviewerId]);
+    }
+  };
+
   const toggleSort = (field) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "desc" ? "asc" : "desc");
@@ -217,6 +341,11 @@ export default function AdminDashboardPage() {
       else if (sortBy === "date") comparison = new Date(a.submittedAt) - new Date(b.submittedAt);
       return sortOrder === "desc" ? -comparison : comparison;
     });
+
+  // Get pending abstracts count for assignment validation
+  const pendingAbstractsCount = abstracts.filter(a => 
+    a.status === "pending" || a.status === "under_review"
+  ).length;
 
   const SortButton = ({ field, label }) => (
     <button
@@ -428,8 +557,6 @@ export default function AdminDashboardPage() {
                                 ) : (
                                   <p className="text-sm text-slate-300">{abstract.abstract}</p>
                                 )}
-
-
                               </div>
 
                               {/* Reviews */}
@@ -538,6 +665,31 @@ export default function AdminDashboardPage() {
           {/* Reviewers Tab */}
           {activeTab === "reviewers" && (
             <>
+              {/* Assignment Controls */}
+              <div className="p-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-slate-400">
+                    {selectedReviewers.length} selected
+                  </span>
+                  {selectedReviewers.length > 0 && (
+                    <button
+                      onClick={() => setSelectedReviewers([])}
+                      className="text-xs text-slate-500 hover:text-slate-300"
+                    >
+                      Clear selection
+                    </button>
+                  )}
+                </div>
+                
+                <button
+                  onClick={() => setShowAssignmentModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Shuffle className="w-4 h-4" />
+                  Randomize Assignments
+                </button>
+              </div>
+
               {reviewers.length === 0 ? (
                 <div className="p-12 text-center">
                   <p className="text-slate-500 text-sm">No reviewers found</p>
@@ -546,16 +698,29 @@ export default function AdminDashboardPage() {
                 <>
                   {/* Header */}
                   <div className="px-4 py-3 border-b border-slate-800 grid grid-cols-12 gap-4 text-xs font-medium text-slate-500 uppercase tracking-wide">
-                    <div className="col-span-4">Reviewer</div>
-                    <div className="col-span-4">Email</div>
-                    <div className="col-span-2 text-center">Reviews</div>
+                    <div className="col-span-1">Select</div>
+                    <div className="col-span-3">Reviewer</div>
+                    <div className="col-span-3">Email</div>
+                    <div className="col-span-2 text-center">Assignment</div>
+                    <div className="col-span-1 text-center">Reviews</div>
                     <div className="col-span-2 text-right">Actions</div>
                   </div>
 
                   <div className="divide-y divide-slate-800">
                     {reviewers.map((reviewer) => (
                       <div key={reviewer.id} className="px-4 py-3 grid grid-cols-12 gap-4 items-center hover:bg-slate-800/30 transition-colors">
-                        <div className="col-span-4">
+                        {/* Checkbox */}
+                        <div className="col-span-1">
+                          <input
+                            type="checkbox"
+                            checked={selectedReviewers.includes(reviewer.id)}
+                            onChange={() => toggleReviewerSelection(reviewer.id)}
+                            className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900"
+                          />
+                        </div>
+
+                        {/* Name */}
+                        <div className="col-span-3">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 bg-slate-700 rounded-lg flex items-center justify-center text-white text-sm font-medium">
                               {reviewer.name?.charAt(0)?.toUpperCase() || "?"}
@@ -563,10 +728,39 @@ export default function AdminDashboardPage() {
                             <span className="text-sm text-white font-medium">{reviewer.name}</span>
                           </div>
                         </div>
-                        <div className="col-span-4">
+
+                        {/* Email */}
+                        <div className="col-span-3">
                           <span className="text-sm text-slate-400">{reviewer.email}</span>
                         </div>
+
+                        {/* Assignment Type */}
                         <div className="col-span-2 text-center">
+                          <button
+                            onClick={() => handleToggleAssignmentType(reviewer.id, reviewer.assignmentType)}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                              reviewer.assignmentType === 'limited'
+                                ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                                : "bg-green-500/20 text-green-400 border border-green-500/30"
+                            }`}
+                            title={reviewer.assignmentType === 'all' ? "Click to set limited access" : "Click to give full access"}
+                          >
+                            {reviewer.assignmentType === 'limited' ? (
+                              <>
+                                <Lock className="w-3 h-3" />
+                                Limited ({reviewer.assignedAbstracts || 0})
+                              </>
+                            ) : (
+                              <>
+                                <Unlock className="w-3 h-3" />
+                                All Access
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Reviews Completed */}
+                        <div className="col-span-1 text-center">
                           <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-medium ${
                             reviewer.totalReviewsCompleted > 0 
                               ? "bg-slate-700 text-white" 
@@ -575,7 +769,18 @@ export default function AdminDashboardPage() {
                             {reviewer.totalReviewsCompleted}
                           </span>
                         </div>
-                        <div className="col-span-2 text-right">
+
+                        {/* Actions */}
+                        <div className="col-span-2 flex justify-end gap-2">
+                          {reviewer.assignmentType === 'limited' && reviewer.assignedAbstracts > 0 && (
+                            <button
+                              onClick={() => handleClearAssignments(reviewer.id)}
+                              className="p-2 text-slate-500 hover:text-amber-400 hover:bg-slate-800 rounded-lg transition-colors"
+                              title="Clear assignments (reset to All Access)"
+                            >
+                              <Settings className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               setReviewerToDelete(reviewer);
@@ -592,7 +797,11 @@ export default function AdminDashboardPage() {
 
                   {/* Summary */}
                   <div className="px-4 py-3 border-t border-slate-800 flex justify-between text-sm text-slate-500">
-                    <span>{reviewers.length} reviewers</span>
+                    <span>
+                      {reviewers.length} reviewers • 
+                      {reviewers.filter(r => r.assignmentType === 'all').length} full access • 
+                      {reviewers.filter(r => r.assignmentType === 'limited').length} limited
+                    </span>
                     <span>{reviewers.reduce((sum, r) => sum + r.totalReviewsCompleted, 0)} total reviews</span>
                   </div>
                 </>
@@ -602,7 +811,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Delete Modal */}
+      {/* Delete Reviewer Modal */}
       {showDeleteModal && reviewerToDelete && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6">
@@ -644,6 +853,145 @@ export default function AdminDashboardPage() {
                   </>
                 ) : (
                   "Remove"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Randomize Assignments Modal */}
+      {showAssignmentModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                <Shuffle className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-white font-medium">Randomize Abstract Assignments</h3>
+                <p className="text-sm text-slate-500">Non-overlapping distribution</p>
+              </div>
+            </div>
+
+            {assignmentResult && (
+              <div className={`mb-4 p-4 rounded-lg ${
+                assignmentResult.success 
+                  ? "bg-green-500/10 border border-green-500/30" 
+                  : "bg-red-500/10 border border-red-500/30"
+              }`}>
+                <p className={`text-sm ${assignmentResult.success ? "text-green-400" : "text-red-400"}`}>
+                  {assignmentResult.message}
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-4 mb-6">
+              {/* Abstracts per reviewer input */}
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">
+                  Abstracts per Reviewer
+                </label>
+                <input
+                  type="number"
+                  value={abstractsPerReviewer}
+                  onChange={(e) => setAbstractsPerReviewer(Math.max(1, parseInt(e.target.value) || 1))}
+                  min="1"
+                  max={pendingAbstractsCount}
+                  className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  {pendingAbstractsCount} abstracts available for review
+                </p>
+              </div>
+
+              {/* Select reviewers */}
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">
+                  Select Reviewers to Assign
+                </label>
+                <div className="max-h-48 overflow-y-auto border border-slate-700 rounded-lg divide-y divide-slate-700">
+                  {reviewers.map((reviewer) => (
+                    <label
+                      key={reviewer.id}
+                      className="flex items-center gap-3 p-3 hover:bg-slate-700/50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedReviewers.includes(reviewer.id)}
+                        onChange={() => toggleReviewerSelection(reviewer.id)}
+                        className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-600"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm text-white">{reviewer.name}</p>
+                        <p className="text-xs text-slate-500">{reviewer.email}</p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        reviewer.assignmentType === 'limited' 
+                          ? "bg-amber-500/20 text-amber-400" 
+                          : "bg-green-500/20 text-green-400"
+                      }`}>
+                        {reviewer.assignmentType === 'limited' 
+                          ? `Limited (${reviewer.assignedAbstracts})` 
+                          : "All"}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Validation info */}
+              {selectedReviewers.length > 0 && (
+                <div className={`p-3 rounded-lg ${
+                  selectedReviewers.length * abstractsPerReviewer <= pendingAbstractsCount
+                    ? "bg-blue-500/10 border border-blue-500/30"
+                    : "bg-red-500/10 border border-red-500/30"
+                }`}>
+                  <p className={`text-sm ${
+                    selectedReviewers.length * abstractsPerReviewer <= pendingAbstractsCount
+                      ? "text-blue-400"
+                      : "text-red-400"
+                  }`}>
+                    {selectedReviewers.length} reviewers × {abstractsPerReviewer} abstracts = {selectedReviewers.length * abstractsPerReviewer} total needed
+                    {selectedReviewers.length * abstractsPerReviewer > pendingAbstractsCount && (
+                      <span className="block mt-1">
+                        ⚠️ Not enough abstracts! Reduce reviewers or abstracts per reviewer.
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowAssignmentModal(false);
+                  setAssignmentResult(null);
+                }}
+                className="flex-1 px-4 py-2.5 bg-slate-700 text-white text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRandomizeAssignments}
+                disabled={
+                  isRandomizing || 
+                  selectedReviewers.length === 0 || 
+                  selectedReviewers.length * abstractsPerReviewer > pendingAbstractsCount
+                }
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isRandomizing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Assigning...
+                  </>
+                ) : (
+                  <>
+                    <Shuffle className="w-4 h-4" />
+                    Assign Randomly
+                  </>
                 )}
               </button>
             </div>
