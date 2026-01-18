@@ -3,7 +3,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle,
-  FileText,
   Send,
   AlertCircle,
   ChevronDown,
@@ -451,17 +450,6 @@ export default function ReviewAbstractPage() {
                       {getDepartmentLabel(abstract.department)}
                     </span>
                   </div>
-                  {abstract.hasPDF && abstract.pdfUrl && (
-                    <a
-                      href={`${import.meta.env.VITE_API_URL}${abstract.pdfUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[#0077AA] hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium"
-                    >
-                      <FileText className="w-4 h-4" />
-                      View PDF
-                    </a>
-                  )}
                 </div>
                 
                 <h1 className="text-2xl font-semibold text-slate-900 leading-tight mb-3">
