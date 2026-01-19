@@ -7,7 +7,7 @@ import { useNavigate, Link } from "react-router-dom";
 // SUBMISSION STATUS FLAG - Easy to toggle
 // Set to false to reopen submissions
 // ==========================================
-const SUBMISSIONS_CLOSED = true;
+const SUBMISSIONS_CLOSED = false;
 
 export default function MultiStepSubmitPage() {
   const navigate = useNavigate();
