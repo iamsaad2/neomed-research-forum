@@ -337,29 +337,16 @@ export default function MultiStepSubmitPage() {
     setErrors({});
 
     try {
-      // Format authors string
-      const primaryAuthorStr = `${formData.primaryAuthor.lastName} ${formData.primaryAuthor.firstName.charAt(0)}, ${formData.primaryAuthor.degree}`;
-      const additionalAuthorsStr = formData.additionalAuthors
-        .map((a) => `${a.lastName} ${a.firstName.charAt(0)}, ${a.degree}`)
-        .join("; ");
-      const allAuthors = additionalAuthorsStr
-        ? `${primaryAuthorStr}; ${additionalAuthorsStr}`
-        : primaryAuthorStr;
-
       // Create FormData
       const submitData = new FormData();
       submitData.append("title", formData.title);
-      submitData.append("authors", allAuthors);
-      submitData.append("email", formData.primaryAuthor.email);
+      submitData.append("primaryAuthor", JSON.stringify(formData.primaryAuthor));
+      submitData.append("additionalAuthors", JSON.stringify(formData.additionalAuthors));
       submitData.append("department", formData.department);
-      submitData.append("departmentOther", formData.departmentOther);
+      submitData.append("departmentOther", formData.departmentOther || "");
       submitData.append("category", formData.category);
-      submitData.append("keywords", keywords.join(", "));
+      submitData.append("keywords", JSON.stringify(keywords));
       submitData.append("abstractContent", JSON.stringify(formData.abstractContent));
-
-      // Full abstract text
-      const fullAbstract = `Background: ${formData.abstractContent.background}\n\nMethods: ${formData.abstractContent.methods}\n\nResults: ${formData.abstractContent.results}\n\nConclusion: ${formData.abstractContent.conclusion}`;
-      submitData.append("abstract", fullAbstract);
 
       if (pdfFile) {
         submitData.append("pdfFile", pdfFile);
@@ -369,7 +356,7 @@ export default function MultiStepSubmitPage() {
 
       if (response.success) {
         // Navigate to thank you page with the token
-        navigate(`/thank-you/${response.data.token}`);
+        navigate(`/thank-you/${response.data.viewToken}`);
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -729,23 +716,18 @@ export default function MultiStepSubmitPage() {
                     }`}
                   >
                     <option value="">Select department</option>
-                    <option value="im">Internal Medicine</option>
-                    <option value="fm">Family Medicine</option>
-                    <option value="peds">Pediatrics</option>
-                    <option value="obgyn">OB/GYN</option>
+                    <option value="internal">Internal Medicine</option>
                     <option value="surgery">Surgery</option>
-                    <option value="psych">Psychiatry</option>
-                    <option value="neuro">Neurology</option>
-                    <option value="em">Emergency Medicine</option>
-                    <option value="path">Pathology</option>
-                    <option value="radio">Radiology</option>
-                    <option value="anes">Anesthesiology</option>
-                    <option value="derm">Dermatology</option>
-                    <option value="ophtho">Ophthalmology</option>
-                    <option value="ent">ENT</option>
-                    <option value="uro">Urology</option>
-                    <option value="ortho">Orthopedics</option>
-                    <option value="pm">Physical Medicine</option>
+                    <option value="pediatrics">Pediatrics</option>
+                    <option value="psychiatry">Psychiatry</option>
+                    <option value="neurology">Neurology</option>
+                    <option value="emergency">Emergency Medicine</option>
+                    <option value="pathology">Pathology</option>
+                    <option value="radiology">Radiology</option>
+                    <option value="anesthesiology">Anesthesiology</option>
+                    <option value="dermatology">Dermatology</option>
+                    <option value="cardiology">Cardiology</option>
+                    <option value="oncology">Oncology</option>
                     <option value="other">Other</option>
                   </select>
                   {errors.department && (
@@ -794,8 +776,6 @@ export default function MultiStepSubmitPage() {
                     <option value="education">Medical Education</option>
                     <option value="basic">Basic Science</option>
                     <option value="public">Public Health</option>
-                    <option value="qi">Quality Improvement</option>
-                    <option value="case">Case Report</option>
                   </select>
                   {errors.category && (
                     <p className="mt-2 text-sm text-red-600">{errors.category}</p>
@@ -1028,7 +1008,7 @@ export default function MultiStepSubmitPage() {
                     {formData.additionalAuthors.map((author, idx) => (
                       <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
                         <p className="text-sm font-medium text-slate-600 mb-1">
-                          Author {idx + 1}
+                          Author {idx + 2}
                         </p>
                         <p className="text-slate-900">
                           {author.firstName} {author.lastName}, {author.degree}
