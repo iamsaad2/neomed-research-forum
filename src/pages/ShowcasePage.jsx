@@ -21,12 +21,13 @@ export default function ShowcasePage() {
       if (response.success) {
         // Transform backend data to match frontend format
         const transformedData = response.data.map((abstract) => ({
-          id: abstract._id,
+          id: abstract._id || abstract.id,
           title: abstract.title,
           authors: abstract.authors,
           department: getDepartmentLabel(abstract.department),
           category: getCategoryLabel(abstract.category),
-          keywords: abstract.keywords ? abstract.keywords.split(',').map(k => k.trim()) : [],
+          // Safely handle keywords - could be array or string
+          keywords: getKeywordsArray(abstract.keywords),
           excerpt: abstract.abstract ? abstract.abstract.substring(0, 150) + '...' : '',
           averageScore: abstract.averageScore || 0,
         }));
@@ -39,6 +40,16 @@ export default function ShowcasePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to safely get keywords array
+  const getKeywordsArray = (keywords) => {
+    if (!keywords) return [];
+    if (Array.isArray(keywords)) return keywords;
+    if (typeof keywords === "string") {
+      return keywords.split(",").map((k) => k.trim()).filter(Boolean);
+    }
+    return [];
   };
 
   const getDepartmentLabel = (dept) => {
@@ -186,8 +197,8 @@ export default function ShowcasePage() {
                 <p className="text-sm text-slate-700 mb-4 line-clamp-3">{a.excerpt}</p>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {a.keywords.slice(0, 5).map((k) => (
-                    <span key={k} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded border border-slate-200">{k}</span>
+                  {a.keywords.slice(0, 5).map((k, idx) => (
+                    <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded border border-slate-200">{k}</span>
                   ))}
                 </div>
 
@@ -198,7 +209,7 @@ export default function ShowcasePage() {
                   </button>
                   {a.averageScore > 0 && (
                     <span className="text-xs text-slate-500 font-medium">
-                      Score: {a.averageScore.toFixed(1)}/10
+                      Score: {a.averageScore.toFixed(1)}/5
                     </span>
                   )}
                 </div>
