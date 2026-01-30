@@ -5,17 +5,18 @@ import {
   Clock,
   XCircle,
   Eye,
-  FileText,
   Calendar,
   Mail,
   AlertCircle,
   ArrowLeft,
-  Download,
-  Upload,
+  ExternalLink,
   Globe,
   Lock,
 } from "lucide-react";
 import { abstractAPI } from "../services/api";
+
+// Microsoft Form URL for PowerPoint submission - UPDATE THIS WITH YOUR ACTUAL FORM URL
+const POWERPOINT_FORM_URL = "https://forms.office.com/Pages/ResponsePage.aspx?id=VlbRrg7Hk0imjBM_xg7fNqrAjdKdTspBoH-ttwTLR8ZUNVg2OVJKUzREODFHOE5JWkQ5QjNSSlpBUy4u";
 
 export default function ViewAbstractPage() {
   const { token } = useParams();
@@ -29,6 +30,7 @@ export default function ViewAbstractPage() {
   const [submittingResponse, setSubmittingResponse] = useState(false);
   const [responseError, setResponseError] = useState("");
   const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
+  const [markingSubmitted, setMarkingSubmitted] = useState(false);
 
   useEffect(() => {
     fetchAbstract();
@@ -115,14 +117,15 @@ export default function ViewAbstractPage() {
     }
   };
 
-  const handleShowcaseToggle = async (newValue) => {
+  const handleMarkPresentationSubmitted = async () => {
+    setMarkingSubmitted(true);
+
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/abstracts/showcase/${token}`,
+        `${import.meta.env.VITE_API_URL}/api/abstracts/mark-presentation/${token}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ displayOnShowcase: newValue }),
         }
       );
 
@@ -131,7 +134,9 @@ export default function ViewAbstractPage() {
         setAbstract(data.data);
       }
     } catch (err) {
-      console.error("Error updating showcase preference:", err);
+      console.error("Error marking presentation as submitted:", err);
+    } finally {
+      setMarkingSubmitted(false);
     }
   };
 
@@ -288,8 +293,8 @@ export default function ViewAbstractPage() {
                 </div>
               )}
 
-              {/* Showcase Option */}
-              <div className="mb-6">
+              {/* Showcase Option - One-time choice before accepting */}
+              <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -299,10 +304,10 @@ export default function ViewAbstractPage() {
                   />
                   <div>
                     <span className="text-sm font-medium text-slate-900">
-                      Display my abstract on the website
+                      Display my abstract on the public showcase
                     </span>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Your abstract will appear on the public Accepted Abstracts page
+                      Your abstract will appear on the Accepted Abstracts page. This choice cannot be changed after you confirm.
                     </p>
                   </div>
                 </label>
@@ -342,37 +347,66 @@ export default function ViewAbstractPage() {
           </div>
         </div>
 
-        {/* Confirmed - Next Steps */}
+        {/* Confirmed - Next Steps with PowerPoint Submission */}
         {hasAccepted && (
           <div className="bg-white border border-slate-200 rounded-lg mb-6 overflow-hidden">
             <div className="border-b border-slate-200 px-6 py-4">
               <h3 className="font-semibold text-slate-900">Next Steps</h3>
             </div>
             <div className="p-6 space-y-4">
-              {/* Presentation Upload */}
+              {/* PowerPoint Submission */}
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Upload className="w-4 h-4 text-slate-600" />
+                  <ExternalLink className="w-4 h-4 text-slate-600" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-slate-900">Submit Presentation Slides</p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Due by {formatDeadline(abstract.presentationDeadline) || "Saturday, February 21, 2026"}
+                  <p className="text-sm text-red-600 font-semibold mt-1">
+                    Due: Saturday, February 21, 2026 at 11:59 PM
                   </p>
-                  {abstract.presentationFile?.filename ? (
-                    <div className="mt-2 flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg inline-flex">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      Uploaded: {abstract.presentationFile.filename}
-                    </div>
-                  ) : (
-                    <p className="mt-2 text-xs text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg inline-block">
-                      Upload instructions will be sent via email
-                    </p>
-                  )}
+                  
+                  {/* Presentation Guidelines */}
+                  <div className="mt-3 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                    <p className="text-sm font-medium text-slate-900 mb-2">Presentation Guidelines</p>
+                    <ul className="text-sm text-slate-700 space-y-1">
+                      <li>• Presentations should be approximately 5 minutes in length</li>
+                      <li>• Please limit your presentation to 7 slides or fewer</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="mt-4 space-y-3">
+                    <a
+                      href={POWERPOINT_FORM_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0077AA] text-white text-sm font-medium rounded-lg hover:bg-[#005F89] transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Submit PowerPoint via Form
+                    </a>
+                    
+                    {abstract.presentationSubmitted ? (
+                      <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-lg">
+                        <CheckCircle className="w-5 h-5" />
+                        <span className="font-medium">Presentation submitted successfully!</span>
+                      </div>
+                    ) : (
+                      <div className="pt-2">
+                        <button
+                          onClick={handleMarkPresentationSubmitted}
+                          disabled={markingSubmitted}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-300 text-emerald-700 text-sm font-medium rounded-lg hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          {markingSubmitted ? "Confirming..." : "I have submitted my PowerPoint"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Showcase Setting */}
+              {/* Showcase Status - Read only after confirmation */}
               <div className="flex items-start gap-4 pt-4 border-t border-slate-100">
                 <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   {abstract.displayOnShowcase ? (
@@ -382,27 +416,12 @@ export default function ViewAbstractPage() {
                   )}
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">Public Showcase</p>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {abstract.displayOnShowcase 
-                          ? "Your abstract is visible on the website" 
-                          : "Your abstract is not publicly displayed"}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleShowcaseToggle(!abstract.displayOnShowcase)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                        abstract.displayOnShowcase ? "bg-slate-900" : "bg-slate-300"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform`}
-                        style={{ transform: abstract.displayOnShowcase ? 'translateX(18px)' : 'translateX(3px)' }}
-                      />
-                    </button>
-                  </div>
+                  <p className="text-sm font-medium text-slate-900">Public Showcase</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {abstract.displayOnShowcase 
+                      ? "Your abstract is displayed on the public showcase" 
+                      : "Your abstract is not publicly displayed"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -451,8 +470,8 @@ export default function ViewAbstractPage() {
             )}
           </div>
 
-          {/* Meta Info */}
-          <div className="grid sm:grid-cols-3 gap-4 p-6 bg-slate-50 border-b border-slate-100">
+          {/* Meta Info - Removed PDF view */}
+          <div className="grid sm:grid-cols-2 gap-4 p-6 bg-slate-50 border-b border-slate-100">
             <div className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-slate-400" />
               <div>
@@ -473,26 +492,6 @@ export default function ViewAbstractPage() {
                 </p>
               </div>
             </div>
-            {abstract.hasPDF && (
-              <div className="flex items-center gap-3">
-                <FileText className="w-4 h-4 text-slate-400" />
-                <div>
-                  <p className="text-xs text-slate-500">Attachment</p>
-                  {abstract.pdfUrl ? (
-                    <a
-                      href={`${import.meta.env.VITE_API_URL}${abstract.pdfUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                    >
-                      View PDF <Download className="w-3 h-3" />
-                    </a>
-                  ) : (
-                    <p className="text-sm text-slate-900">PDF Uploaded</p>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Abstract Content */}
