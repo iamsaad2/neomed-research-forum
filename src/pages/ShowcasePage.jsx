@@ -207,11 +207,7 @@ export default function ShowcasePage() {
                     View Full Abstract 
                     <ChevronRight className="ml-1 w-4 h-4" />
                   </button>
-                  {a.averageScore > 0 && (
-                    <span className="text-xs text-slate-500 font-medium">
-                      Score: {a.averageScore.toFixed(1)}/5
-                    </span>
-                  )}
+                 
                 </div>
               </div>
             ))}
