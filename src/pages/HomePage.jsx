@@ -48,11 +48,11 @@ export default function HomePage() {
 
             {/* Main Heading */}
             <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-              Research Forum 2026
+              Oral Research Forum 2026
             </h1>
 
             <p className="text-xl text-slate-600 mb-10 leading-relaxed">
-              Northeast Ohio Medical University's premier annual research showcase.
+              Northeast Ohio Medical University's premier annual oral research showcase.
               Abstract submissions have closed. Thank you to all who submitted!
             </p>
 
@@ -190,7 +190,7 @@ export default function HomePage() {
       <section className="py-20 bg-slate-50 border-t border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-slate-900 mb-4">
-            See You at the Forum!
+            Join us at the Forum!
           </h2>
           <p className="text-lg text-slate-600 mb-8">
             Join us on February 25, 2026 at 4:00 PM for NEOMED's Research Forum featuring 
