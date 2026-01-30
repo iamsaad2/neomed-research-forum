@@ -48,7 +48,7 @@ export default function HomePage() {
 
             {/* Main Heading */}
             <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-              Oral Research Forum 2026
+              Research Forum 2026
             </h1>
 
             <p className="text-xl text-slate-600 mb-10 leading-relaxed">
