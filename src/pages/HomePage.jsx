@@ -126,17 +126,17 @@ export default function HomePage() {
                 title: "Abstract Submission Deadline", 
                 description: "Submissions are now closed",
                 icon: Clock,
-                status: "deadline-passed"
+                status: "complete"
               },
               { 
                 date: "January 28, 2026", 
                 title: "Acceptance Notification", 
                 description: "Authors will be notified of their submission status",
                 icon: Award,
-                status: "upcoming"
+                status: "current"
               },
               { 
-                date: "February 18, 2026", 
+                date: "February 21, 2026", 
                 title: "Final Presentation Due", 
                 description: "Accepted presenters submit final slides",
                 icon: Users,
@@ -153,21 +153,21 @@ export default function HomePage() {
               <div 
                 key={idx}
                 className={`border rounded-lg p-6 transition-all ${
-                  item.status === "deadline-passed"
-                    ? "bg-red-50/50 border-red-300" 
+                  item.status === "current"
+                    ? "bg-[#0099CC]/10 border-[#0099CC] ring-2 ring-[#0099CC]" 
                     : item.status === "complete"
-                    ? "bg-emerald-50/50 border-emerald-300"
+                    ? "bg-slate-100 border-slate-300 opacity-60"
                     : "bg-white border-slate-200 hover:border-[#0099CC] hover:shadow-md"
                 }`}
               >
                 <div className="flex items-start gap-4">
                   <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
-                    item.status === "deadline-passed" ? "bg-red-400" :
-                    item.status === "complete" ? "bg-emerald-500" :
+                    item.status === "current" ? "bg-[#0099CC]" :
+                    item.status === "complete" ? "bg-slate-400" :
                     item.status === "event" ? "bg-[#0099CC]" : "bg-slate-100"
                   }`}>
                     <item.icon className={`w-6 h-6 ${
-                      item.status === "deadline-passed" || item.status === "complete" || item.status === "event" 
+                      item.status === "current" || item.status === "complete" || item.status === "event" 
                         ? "text-white" 
                         : "text-slate-600"
                     }`} />
@@ -175,18 +175,18 @@ export default function HomePage() {
                   <div className="flex-1">
                     <div className="flex items-baseline justify-between mb-2">
                       <h3 className={`text-lg font-bold ${
-                        item.status === "deadline-passed" ? "text-red-800" : "text-slate-900"
+                        item.status === "current" ? "text-[#0077AA]" : "text-slate-900"
                       }`}>
                         {item.title}
                       </h3>
                       <span className={`text-sm font-medium ${
-                        item.status === "deadline-passed" ? "text-red-600" : "text-slate-500"
+                        item.status === "current" ? "text-[#0099CC]" : "text-slate-500"
                       }`}>
                         {item.date}
                       </span>
                     </div>
                     <p className={
-                      item.status === "deadline-passed" ? "text-red-700" : "text-slate-600"
+                      item.status === "current" ? "text-slate-700" : "text-slate-600"
                     }>
                       {item.description}
                     </p>
