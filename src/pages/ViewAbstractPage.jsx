@@ -281,8 +281,8 @@ export default function ViewAbstractPage() {
               <h2 className="text-lg font-semibold text-slate-900">
                 Your abstract has been accepted
               </h2>
-              <p className="text-sm text-slate-600 mt-1">
-                Please confirm your participation by {formatDeadline(abstract.authorResponseDeadline)}
+              <p className="text-sm text-red-600 font-semibold mt-1">
+                Please confirm your participation by Friday, February 6, 2026 at 11:59 PM
               </p>
             </div>
             
