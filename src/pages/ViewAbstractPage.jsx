@@ -12,6 +12,12 @@ import {
   Award,
   ArrowLeft,
   Download,
+  PartyPopper,
+  Upload,
+  ThumbsUp,
+  ThumbsDown,
+  Globe,
+  GlobeLock,
 } from "lucide-react";
 import { abstractAPI } from "../services/api";
 
@@ -21,6 +27,13 @@ export default function ViewAbstractPage() {
   const [abstract, setAbstract] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
+  // Author response state
+  const [showResponseModal, setShowResponseModal] = useState(false);
+  const [responseType, setResponseType] = useState(null); // 'accept' or 'decline'
+  const [displayOnShowcase, setDisplayOnShowcase] = useState(true);
+  const [submittingResponse, setSubmittingResponse] = useState(false);
+  const [responseError, setResponseError] = useState("");
 
   useEffect(() => {
     fetchAbstract();
@@ -42,7 +55,80 @@ export default function ViewAbstractPage() {
     }
   };
 
-  const getStatusConfig = (status) => {
+  const handleAuthorResponse = async () => {
+    setSubmittingResponse(true);
+    setResponseError("");
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/abstracts/respond/${token}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            response: responseType === "accept" ? "accepted" : "declined",
+            displayOnShowcase: responseType === "accept" ? displayOnShowcase : false,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setAbstract(data.data);
+        setShowResponseModal(false);
+      } else {
+        setResponseError(data.message || "Failed to submit response");
+      }
+    } catch (err) {
+      console.error("Error submitting response:", err);
+      setResponseError("Failed to submit response. Please try again.");
+    } finally {
+      setSubmittingResponse(false);
+    }
+  };
+
+  const handleShowcaseToggle = async (newValue) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/abstracts/showcase/${token}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            displayOnShowcase: newValue,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setAbstract(data.data);
+      }
+    } catch (err) {
+      console.error("Error updating showcase preference:", err);
+    }
+  };
+
+  const getStatusConfig = (status, authorResponse) => {
+    // Special case: accepted but author declined
+    if (status === "accepted" && authorResponse === "declined") {
+      return {
+        icon: XCircle,
+        label: "Participation Declined",
+        bg: "bg-slate-50",
+        border: "border-slate-200",
+        text: "text-slate-700",
+        iconBg: "bg-slate-100",
+        iconColor: "text-slate-600",
+      };
+    }
+
     const configs = {
       pending: {
         icon: Clock,
@@ -64,7 +150,7 @@ export default function ViewAbstractPage() {
       },
       accepted: {
         icon: CheckCircle,
-        label: "Accepted",
+        label: authorResponse === "accepted" ? "Confirmed for Presentation" : "Accepted - Response Needed",
         bg: "bg-green-50",
         border: "border-green-200",
         text: "text-green-700",
@@ -112,6 +198,16 @@ export default function ViewAbstractPage() {
     return map[cat] || cat;
   };
 
+  const formatDeadline = (date) => {
+    if (!date) return null;
+    return new Date(date).toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -143,8 +239,11 @@ export default function ViewAbstractPage() {
     );
   }
 
-  const statusConfig = getStatusConfig(abstract.status);
+  const statusConfig = getStatusConfig(abstract.status, abstract.authorResponse);
   const StatusIcon = statusConfig.icon;
+  const needsResponse = abstract.status === "accepted" && (!abstract.authorResponse || abstract.authorResponse === "pending");
+  const hasAccepted = abstract.status === "accepted" && abstract.authorResponse === "accepted";
+  const hasDeclined = abstract.status === "accepted" && abstract.authorResponse === "declined";
 
   return (
     <div className="min-h-screen bg-slate-50 py-8">
@@ -157,6 +256,56 @@ export default function ViewAbstractPage() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           <span className="text-sm font-medium">Back to Home</span>
         </button>
+
+        {/* ACTION REQUIRED BANNER - Only show if accepted and needs response */}
+        {needsResponse && (
+          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-6 mb-6 text-white shadow-lg">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <PartyPopper className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold mb-2">🎉 Congratulations!</h2>
+                <p className="text-green-100 mb-4">
+                  Your abstract has been accepted for presentation at NEOMED Research Forum 2026!
+                </p>
+                
+                <div className="bg-white/10 rounded-lg p-4 mb-4">
+                  <p className="font-semibold mb-1">⚠️ Action Required</p>
+                  <p className="text-sm text-green-100">
+                    Please confirm your participation by{" "}
+                    <span className="font-bold text-white">
+                      {formatDeadline(abstract.authorResponseDeadline) || "Thursday, February 5th, 2026"}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => {
+                      setResponseType("accept");
+                      setShowResponseModal(true);
+                    }}
+                    className="flex-1 px-6 py-3 bg-white text-green-700 font-semibold rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ThumbsUp className="w-5 h-5" />
+                    Accept & Confirm Participation
+                  </button>
+                  <button
+                    onClick={() => {
+                      setResponseType("decline");
+                      setShowResponseModal(true);
+                    }}
+                    className="px-6 py-3 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ThumbsDown className="w-5 h-5" />
+                    Decline
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Status Banner */}
         <div className={`${statusConfig.bg} ${statusConfig.border} border rounded-2xl p-5 mb-6`}>
@@ -174,11 +323,95 @@ export default function ViewAbstractPage() {
                 </p>
               </div>
             </div>
-            {abstract.status === "accepted" && (
+            {hasAccepted && (
               <Award className="w-10 h-10 text-amber-500" />
             )}
           </div>
         </div>
+
+        {/* Presentation Submission Card - Show after author accepts */}
+        {hasAccepted && (
+          <div className="bg-white rounded-2xl border border-blue-200 p-6 mb-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Upload className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-slate-900 mb-1">Presentation Slides</h3>
+                <p className="text-sm text-slate-600 mb-3">
+                  Please submit your presentation slides by{" "}
+                  <span className="font-semibold text-blue-700">
+                    {formatDeadline(abstract.presentationDeadline) || "Saturday, February 21st, 2026"}
+                  </span>
+                </p>
+                
+                {abstract.presentationFile?.filename ? (
+                  <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <FileText className="w-5 h-5 text-green-600" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-green-800">{abstract.presentationFile.filename}</p>
+                      <p className="text-xs text-green-600">
+                        Uploaded {new Date(abstract.presentationFile.uploadedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                ) : (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm text-amber-800">
+                      <strong>Coming Soon:</strong> Presentation upload will be available shortly. 
+                      You will receive an email with instructions on how to submit your slides.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Showcase Preference Toggle */}
+            <div className="mt-6 pt-6 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {abstract.displayOnShowcase ? (
+                    <Globe className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <GlobeLock className="w-5 h-5 text-slate-400" />
+                  )}
+                  <div>
+                    <p className="font-medium text-slate-900">Public Showcase</p>
+                    <p className="text-sm text-slate-500">
+                      {abstract.displayOnShowcase 
+                        ? "Your abstract is visible on the public showcase" 
+                        : "Your abstract is not displayed publicly"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleShowcaseToggle(!abstract.displayOnShowcase)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    abstract.displayOnShowcase ? "bg-green-600" : "bg-slate-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      abstract.displayOnShowcase ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Author Declined Card */}
+        {hasDeclined && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
+            <h3 className="font-semibold text-slate-900 mb-2">Thank You for Your Submission</h3>
+            <p className="text-slate-600">
+              You have declined the presentation spot for this abstract. We appreciate your 
+              submission to NEOMED Research Forum 2026 and encourage you to participate in future forums.
+            </p>
+          </div>
+        )}
 
         {/* Main Content Card */}
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
@@ -320,7 +553,7 @@ export default function ViewAbstractPage() {
               What Happens Next?
             </h3>
             <div className="space-y-2 text-sm text-slate-600">
-              <p>• <strong>Review Period:</strong> January 7 - 28, 2026</p>
+              <p>• <strong>Review Period:</strong> January 13 - 28, 2026</p>
               <p>• <strong>Decision Notification:</strong> January 28, 2026</p>
               <p>• Check back here anytime to see status updates</p>
             </div>
@@ -337,23 +570,6 @@ export default function ViewAbstractPage() {
               Your abstract is being evaluated by our review committee. 
               You'll receive an email notification when a decision is made (by January 28, 2026).
             </p>
-          </div>
-        )}
-
-        {abstract.status === "accepted" && (
-          <div className="mt-6 bg-green-50 rounded-2xl border border-green-200 p-6">
-            <h3 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
-              <Award className="w-5 h-5" />
-              Congratulations! 🎉
-            </h3>
-            <p className="text-sm text-green-800 mb-3">
-              <strong>Your abstract has been accepted for presentation!</strong>
-            </p>
-            <div className="space-y-2 text-sm text-green-800">
-              <p>• <strong>Next Step:</strong> Submit your final presentation slides by February 18, 2026</p>
-              <p>• <strong>Forum Date:</strong> February 25, 2026</p>
-              <p>• You will receive an email with presentation guidelines</p>
-            </div>
           </div>
         )}
 
@@ -394,6 +610,132 @@ export default function ViewAbstractPage() {
           </p>
         </div>
       </div>
+
+      {/* Response Modal */}
+      {showResponseModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            {responseType === "accept" ? (
+              <>
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ThumbsUp className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">
+                    Confirm Your Participation
+                  </h3>
+                  <p className="text-slate-600">
+                    You're accepting to present your abstract at NEOMED Research Forum 2026.
+                  </p>
+                </div>
+
+                {/* Showcase Option */}
+                <div className="bg-slate-50 rounded-xl p-4 mb-6">
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="showcase"
+                      checked={displayOnShowcase}
+                      onChange={(e) => setDisplayOnShowcase(e.target.checked)}
+                      className="mt-1 w-5 h-5 rounded border-slate-300 text-green-600 focus:ring-green-500"
+                    />
+                    <label htmlFor="showcase" className="cursor-pointer">
+                      <p className="font-medium text-slate-900">Display on Public Showcase</p>
+                      <p className="text-sm text-slate-500">
+                        Allow your abstract to be displayed on our website's Accepted Abstracts page
+                      </p>
+                    </label>
+                  </div>
+                </div>
+
+                {responseError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {responseError}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowResponseModal(false)}
+                    className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors"
+                    disabled={submittingResponse}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAuthorResponse}
+                    disabled={submittingResponse}
+                    className="flex-1 px-4 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {submittingResponse ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Confirming...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-5 h-5" />
+                        Confirm Participation
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ThumbsDown className="w-8 h-8 text-slate-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">
+                    Decline Presentation
+                  </h3>
+                  <p className="text-slate-600">
+                    Are you sure you want to decline your presentation spot? This action cannot be undone.
+                  </p>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+                  <p className="text-sm text-amber-800">
+                    <strong>Note:</strong> By declining, you are giving up your presentation slot. 
+                    Your abstract will not be presented at the forum.
+                  </p>
+                </div>
+
+                {responseError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {responseError}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowResponseModal(false)}
+                    className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors"
+                    disabled={submittingResponse}
+                  >
+                    Go Back
+                  </button>
+                  <button
+                    onClick={handleAuthorResponse}
+                    disabled={submittingResponse}
+                    className="flex-1 px-4 py-3 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {submittingResponse ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Yes, Decline"
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
