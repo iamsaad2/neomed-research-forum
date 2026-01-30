@@ -9,15 +9,11 @@ import {
   Calendar,
   Mail,
   AlertCircle,
-  Award,
   ArrowLeft,
   Download,
-  PartyPopper,
   Upload,
-  ThumbsUp,
-  ThumbsDown,
   Globe,
-  GlobeLock,
+  Lock,
 } from "lucide-react";
 import { abstractAPI } from "../services/api";
 
@@ -29,11 +25,10 @@ export default function ViewAbstractPage() {
   const [error, setError] = useState("");
   
   // Author response state
-  const [showResponseModal, setShowResponseModal] = useState(false);
-  const [responseType, setResponseType] = useState(null); // 'accept' or 'decline'
   const [displayOnShowcase, setDisplayOnShowcase] = useState(true);
   const [submittingResponse, setSubmittingResponse] = useState(false);
   const [responseError, setResponseError] = useState("");
+  const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
 
   useEffect(() => {
     fetchAbstract();
@@ -55,7 +50,7 @@ export default function ViewAbstractPage() {
     }
   };
 
-  const handleAuthorResponse = async () => {
+  const handleAccept = async () => {
     setSubmittingResponse(true);
     setResponseError("");
 
@@ -64,12 +59,10 @@ export default function ViewAbstractPage() {
         `${import.meta.env.VITE_API_URL}/api/abstracts/respond/${token}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            response: responseType === "accept" ? "accepted" : "declined",
-            displayOnShowcase: responseType === "accept" ? displayOnShowcase : false,
+            response: "accepted",
+            displayOnShowcase: displayOnShowcase,
           }),
         }
       );
@@ -78,7 +71,39 @@ export default function ViewAbstractPage() {
 
       if (data.success) {
         setAbstract(data.data);
-        setShowResponseModal(false);
+      } else {
+        setResponseError(data.message || "Failed to submit response");
+      }
+    } catch (err) {
+      console.error("Error submitting response:", err);
+      setResponseError("Failed to submit response. Please try again.");
+    } finally {
+      setSubmittingResponse(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    setSubmittingResponse(true);
+    setResponseError("");
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/abstracts/respond/${token}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            response: "declined",
+            displayOnShowcase: false,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setAbstract(data.data);
+        setShowDeclineConfirm(false);
       } else {
         setResponseError(data.message || "Failed to submit response");
       }
@@ -96,17 +121,12 @@ export default function ViewAbstractPage() {
         `${import.meta.env.VITE_API_URL}/api/abstracts/showcase/${token}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            displayOnShowcase: newValue,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ displayOnShowcase: newValue }),
         }
       );
 
       const data = await response.json();
-
       if (data.success) {
         setAbstract(data.data);
       }
@@ -116,16 +136,14 @@ export default function ViewAbstractPage() {
   };
 
   const getStatusConfig = (status, authorResponse) => {
-    // Special case: accepted but author declined
     if (status === "accepted" && authorResponse === "declined") {
       return {
         icon: XCircle,
         label: "Participation Declined",
         bg: "bg-slate-50",
         border: "border-slate-200",
-        text: "text-slate-700",
-        iconBg: "bg-slate-100",
-        iconColor: "text-slate-600",
+        text: "text-slate-600",
+        iconColor: "text-slate-400",
       };
     }
 
@@ -135,36 +153,32 @@ export default function ViewAbstractPage() {
         label: "Pending Review",
         bg: "bg-amber-50",
         border: "border-amber-200",
-        text: "text-amber-700",
-        iconBg: "bg-amber-100",
-        iconColor: "text-amber-600",
+        text: "text-amber-800",
+        iconColor: "text-amber-500",
       },
       under_review: {
         icon: Eye,
         label: "Under Review",
         bg: "bg-blue-50",
         border: "border-blue-200",
-        text: "text-blue-700",
-        iconBg: "bg-blue-100",
-        iconColor: "text-blue-600",
+        text: "text-blue-800",
+        iconColor: "text-blue-500",
       },
       accepted: {
         icon: CheckCircle,
-        label: authorResponse === "accepted" ? "Confirmed for Presentation" : "Accepted - Response Needed",
-        bg: "bg-green-50",
-        border: "border-green-200",
-        text: "text-green-700",
-        iconBg: "bg-green-100",
-        iconColor: "text-green-600",
+        label: authorResponse === "accepted" ? "Confirmed" : "Accepted",
+        bg: authorResponse === "accepted" ? "bg-emerald-50" : "bg-blue-50",
+        border: authorResponse === "accepted" ? "border-emerald-200" : "border-blue-200",
+        text: authorResponse === "accepted" ? "text-emerald-800" : "text-blue-800",
+        iconColor: authorResponse === "accepted" ? "text-emerald-500" : "text-blue-500",
       },
       rejected: {
         icon: XCircle,
         label: "Not Selected",
         bg: "bg-slate-50",
         border: "border-slate-200",
-        text: "text-slate-700",
-        iconBg: "bg-slate-100",
-        iconColor: "text-slate-600",
+        text: "text-slate-600",
+        iconColor: "text-slate-400",
       },
     };
     return configs[status] || configs.pending;
@@ -199,7 +213,7 @@ export default function ViewAbstractPage() {
   };
 
   const formatDeadline = (date) => {
-    if (!date) return null;
+    if (!date) return "Thursday, February 5, 2026";
     return new Date(date).toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
@@ -212,8 +226,8 @@ export default function ViewAbstractPage() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block w-10 h-10 border-3 border-[#0099CC] border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-slate-500">Loading your submission...</p>
+          <div className="inline-block w-8 h-8 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin mb-4"></div>
+          <p className="text-slate-500 text-sm">Loading submission...</p>
         </div>
       </div>
     );
@@ -222,15 +236,13 @@ export default function ViewAbstractPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-red-200 p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-red-600" />
-          </div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Submission Not Found</h2>
-          <p className="text-slate-600 mb-6">{error}</p>
+        <div className="max-w-md w-full bg-white rounded-lg border border-slate-200 p-8 text-center">
+          <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-slate-900 mb-2">Submission Not Found</h2>
+          <p className="text-slate-600 text-sm mb-6">{error}</p>
           <button
             onClick={() => navigate("/")}
-            className="px-6 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors font-medium"
+            className="px-5 py-2 bg-slate-900 text-white text-sm rounded-lg hover:bg-slate-800 transition-colors"
           >
             Return to Home
           </button>
@@ -247,197 +259,190 @@ export default function ViewAbstractPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button
           onClick={() => navigate("/")}
-          className="flex items-center text-slate-500 hover:text-slate-900 mb-6 transition-colors"
+          className="flex items-center text-slate-500 hover:text-slate-700 mb-6 transition-colors text-sm"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          <span className="text-sm font-medium">Back to Home</span>
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
+          Back to Home
         </button>
 
-        {/* ACTION REQUIRED BANNER - Only show if accepted and needs response */}
+        {/* Action Required Card - Clean and Professional */}
         {needsResponse && (
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-6 mb-6 text-white shadow-lg">
-            <div className="flex items-start gap-4">
-              <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <PartyPopper className="w-8 h-8" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-2">🎉 Congratulations!</h2>
-                <p className="text-green-100 mb-4">
-                  Your abstract has been accepted for presentation at NEOMED Research Forum 2026!
-                </p>
-                
-                <div className="bg-white/10 rounded-lg p-4 mb-4">
-                  <p className="font-semibold mb-1">⚠️ Action Required</p>
-                  <p className="text-sm text-green-100">
-                    Please confirm your participation by{" "}
-                    <span className="font-bold text-white">
-                      {formatDeadline(abstract.authorResponseDeadline) || "Thursday, February 5th, 2026"}
-                    </span>
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={() => {
-                      setResponseType("accept");
-                      setShowResponseModal(true);
-                    }}
-                    className="flex-1 px-6 py-3 bg-white text-green-700 font-semibold rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <ThumbsUp className="w-5 h-5" />
-                    Accept & Confirm Participation
-                  </button>
-                  <button
-                    onClick={() => {
-                      setResponseType("decline");
-                      setShowResponseModal(true);
-                    }}
-                    className="px-6 py-3 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <ThumbsDown className="w-5 h-5" />
-                    Decline
-                  </button>
-                </div>
-              </div>
+          <div className="bg-white border border-slate-200 rounded-lg mb-6 overflow-hidden">
+            <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Your abstract has been accepted
+              </h2>
+              <p className="text-sm text-slate-600 mt-1">
+                Please confirm your participation by {formatDeadline(abstract.authorResponseDeadline)}
+              </p>
             </div>
-          </div>
-        )}
-
-        {/* Status Banner */}
-        <div className={`${statusConfig.bg} ${statusConfig.border} border rounded-2xl p-5 mb-6`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 ${statusConfig.iconBg} rounded-xl flex items-center justify-center`}>
-                <StatusIcon className={`w-6 h-6 ${statusConfig.iconColor}`} />
-              </div>
-              <div>
-                <h2 className={`text-lg font-semibold ${statusConfig.text}`}>
-                  {statusConfig.label}
-                </h2>
-                <p className={`text-sm ${statusConfig.text} opacity-80`}>
-                  {abstract.statusMessage}
-                </p>
-              </div>
-            </div>
-            {hasAccepted && (
-              <Award className="w-10 h-10 text-amber-500" />
-            )}
-          </div>
-        </div>
-
-        {/* Presentation Submission Card - Show after author accepts */}
-        {hasAccepted && (
-          <div className="bg-white rounded-2xl border border-blue-200 p-6 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Upload className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-slate-900 mb-1">Presentation Slides</h3>
-                <p className="text-sm text-slate-600 mb-3">
-                  Please submit your presentation slides by{" "}
-                  <span className="font-semibold text-blue-700">
-                    {formatDeadline(abstract.presentationDeadline) || "Saturday, February 21st, 2026"}
-                  </span>
-                </p>
-                
-                {abstract.presentationFile?.filename ? (
-                  <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <FileText className="w-5 h-5 text-green-600" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-green-800">{abstract.presentationFile.filename}</p>
-                      <p className="text-xs text-green-600">
-                        Uploaded {new Date(abstract.presentationFile.uploadedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                ) : (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-800">
-                      <strong>Coming Soon:</strong> Presentation upload will be available shortly. 
-                      You will receive an email with instructions on how to submit your slides.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Showcase Preference Toggle */}
-            <div className="mt-6 pt-6 border-t border-slate-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {abstract.displayOnShowcase ? (
-                    <Globe className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <GlobeLock className="w-5 h-5 text-slate-400" />
-                  )}
-                  <div>
-                    <p className="font-medium text-slate-900">Public Showcase</p>
-                    <p className="text-sm text-slate-500">
-                      {abstract.displayOnShowcase 
-                        ? "Your abstract is visible on the public showcase" 
-                        : "Your abstract is not displayed publicly"}
-                    </p>
-                  </div>
+            
+            <div className="p-6">
+              {responseError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {responseError}
                 </div>
-                <button
-                  onClick={() => handleShowcaseToggle(!abstract.displayOnShowcase)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    abstract.displayOnShowcase ? "bg-green-600" : "bg-slate-300"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      abstract.displayOnShowcase ? "translate-x-6" : "translate-x-1"
-                    }`}
+              )}
+
+              {/* Showcase Option */}
+              <div className="mb-6">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={displayOnShowcase}
+                    onChange={(e) => setDisplayOnShowcase(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
                   />
+                  <div>
+                    <span className="text-sm font-medium text-slate-900">
+                      Display my abstract on the website
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Your abstract will appear on the public Accepted Abstracts page
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleAccept}
+                  disabled={submittingResponse}
+                  className="flex-1 px-5 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingResponse ? "Submitting..." : "Accept & Confirm Participation"}
+                </button>
+                <button
+                  onClick={() => setShowDeclineConfirm(true)}
+                  disabled={submittingResponse}
+                  className="px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+                >
+                  Decline
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Author Declined Card */}
+        {/* Status Badge */}
+        <div className={`${statusConfig.bg} ${statusConfig.border} border rounded-lg px-4 py-3 mb-6 flex items-center gap-3`}>
+          <StatusIcon className={`w-5 h-5 ${statusConfig.iconColor}`} />
+          <div>
+            <span className={`text-sm font-medium ${statusConfig.text}`}>
+              {statusConfig.label}
+            </span>
+            <p className={`text-xs ${statusConfig.text} opacity-75 mt-0.5`}>
+              {abstract.statusMessage}
+            </p>
+          </div>
+        </div>
+
+        {/* Confirmed - Next Steps */}
+        {hasAccepted && (
+          <div className="bg-white border border-slate-200 rounded-lg mb-6 overflow-hidden">
+            <div className="border-b border-slate-200 px-6 py-4">
+              <h3 className="font-semibold text-slate-900">Next Steps</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Presentation Upload */}
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Upload className="w-4 h-4 text-slate-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-900">Submit Presentation Slides</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Due by {formatDeadline(abstract.presentationDeadline) || "Saturday, February 21, 2026"}
+                  </p>
+                  {abstract.presentationFile?.filename ? (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg inline-flex">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Uploaded: {abstract.presentationFile.filename}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg inline-block">
+                      Upload instructions will be sent via email
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Showcase Setting */}
+              <div className="flex items-start gap-4 pt-4 border-t border-slate-100">
+                <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  {abstract.displayOnShowcase ? (
+                    <Globe className="w-4 h-4 text-slate-600" />
+                  ) : (
+                    <Lock className="w-4 h-4 text-slate-600" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">Public Showcase</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {abstract.displayOnShowcase 
+                          ? "Your abstract is visible on the website" 
+                          : "Your abstract is not publicly displayed"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleShowcaseToggle(!abstract.displayOnShowcase)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        abstract.displayOnShowcase ? "bg-slate-900" : "bg-slate-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform`}
+                        style={{ transform: abstract.displayOnShowcase ? 'translateX(18px)' : 'translateX(3px)' }}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Declined Message */}
         {hasDeclined && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
-            <h3 className="font-semibold text-slate-900 mb-2">Thank You for Your Submission</h3>
-            <p className="text-slate-600">
-              You have declined the presentation spot for this abstract. We appreciate your 
-              submission to NEOMED Research Forum 2026 and encourage you to participate in future forums.
+          <div className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
+            <p className="text-sm text-slate-600">
+              You have declined the presentation spot. Thank you for your submission to NEOMED Research Forum 2026.
             </p>
           </div>
         )}
 
         {/* Main Content Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
           {/* Header */}
           <div className="p-6 border-b border-slate-100">
-            <div className="flex flex-wrap gap-2 mb-4">
-              <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+            <div className="flex flex-wrap gap-2 mb-3">
+              <span className="px-2.5 py-0.5 bg-slate-100 text-slate-600 text-xs font-medium rounded">
                 {getCategoryLabel(abstract.category)}
               </span>
-              <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+              <span className="px-2.5 py-0.5 bg-slate-100 text-slate-600 text-xs font-medium rounded">
                 {abstract.departmentOther || getDepartmentLabel(abstract.department)}
               </span>
             </div>
 
-            <h1 className="text-2xl font-semibold text-slate-900 mb-3">
+            <h1 className="text-xl font-semibold text-slate-900 mb-2">
               {abstract.title}
             </h1>
 
-            <p className="text-slate-600">{abstract.allAuthors}</p>
+            <p className="text-sm text-slate-600">{abstract.allAuthors}</p>
 
             {abstract.keywords && abstract.keywords.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-4">
+              <div className="flex flex-wrap gap-1.5 mt-3">
                 {abstract.keywords.map((keyword, idx) => (
                   <span
                     key={idx}
-                    className="px-2 py-0.5 bg-blue-50 text-[#0077AA] text-xs rounded"
+                    className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded"
                   >
                     {keyword}
                   </span>
@@ -449,21 +454,17 @@ export default function ViewAbstractPage() {
           {/* Meta Info */}
           <div className="grid sm:grid-cols-3 gap-4 p-6 bg-slate-50 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-200">
-                <Mail className="w-5 h-5 text-slate-500" />
-              </div>
+              <Mail className="w-4 h-4 text-slate-400" />
               <div>
                 <p className="text-xs text-slate-500">Contact</p>
-                <p className="text-sm text-slate-900 font-medium truncate">{abstract.email}</p>
+                <p className="text-sm text-slate-900">{abstract.email}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-200">
-                <Calendar className="w-5 h-5 text-slate-500" />
-              </div>
+              <Calendar className="w-4 h-4 text-slate-400" />
               <div>
                 <p className="text-xs text-slate-500">Submitted</p>
-                <p className="text-sm text-slate-900 font-medium">
+                <p className="text-sm text-slate-900">
                   {new Date(abstract.submittedAt).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -474,9 +475,7 @@ export default function ViewAbstractPage() {
             </div>
             {abstract.hasPDF && (
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-200">
-                  <FileText className="w-5 h-5 text-green-600" />
-                </div>
+                <FileText className="w-4 h-4 text-slate-400" />
                 <div>
                   <p className="text-xs text-slate-500">Attachment</p>
                   {abstract.pdfUrl ? (
@@ -484,13 +483,12 @@ export default function ViewAbstractPage() {
                       href={`${import.meta.env.VITE_API_URL}${abstract.pdfUrl}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-[#0077AA] font-medium hover:underline flex items-center gap-1"
+                      className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
                     >
-                      View PDF
-                      <Download className="w-3 h-3" />
+                      View PDF <Download className="w-3 h-3" />
                     </a>
                   ) : (
-                    <p className="text-sm text-slate-900 font-medium">PDF Uploaded</p>
+                    <p className="text-sm text-slate-900">PDF Uploaded</p>
                   )}
                 </div>
               </div>
@@ -499,45 +497,23 @@ export default function ViewAbstractPage() {
 
           {/* Abstract Content */}
           <div className="p-6">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">Abstract</h3>
-            <div className="space-y-5">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">Abstract</h3>
+            <div className="space-y-4">
               {abstract.abstractContent?.background ? (
                 <>
-                  <div>
-                    <h4 className="text-xs font-semibold text-[#0077AA] uppercase tracking-wide mb-2">
-                      Background
-                    </h4>
-                    <p className="text-slate-700 leading-relaxed">
-                      {abstract.abstractContent.background}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-[#0077AA] uppercase tracking-wide mb-2">
-                      Methods
-                    </h4>
-                    <p className="text-slate-700 leading-relaxed">
-                      {abstract.abstractContent.methods}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-[#0077AA] uppercase tracking-wide mb-2">
-                      Results
-                    </h4>
-                    <p className="text-slate-700 leading-relaxed">
-                      {abstract.abstractContent.results}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-[#0077AA] uppercase tracking-wide mb-2">
-                      Conclusion
-                    </h4>
-                    <p className="text-slate-700 leading-relaxed">
-                      {abstract.abstractContent.conclusion}
-                    </p>
-                  </div>
+                  {["background", "methods", "results", "conclusion"].map((section) => (
+                    <div key={section}>
+                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-1.5">
+                        {section}
+                      </h4>
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        {abstract.abstractContent[section]}
+                      </p>
+                    </div>
+                  ))}
                 </>
               ) : (
-                <p className="text-slate-700 whitespace-pre-line leading-relaxed">
+                <p className="text-sm text-slate-700 whitespace-pre-line leading-relaxed">
                   {abstract.fullAbstract}
                 </p>
               )}
@@ -545,194 +521,77 @@ export default function ViewAbstractPage() {
           </div>
         </div>
 
-        {/* Status-specific Info Cards */}
+        {/* Timeline Info */}
         {abstract.status === "pending" && (
-          <div className="mt-6 bg-white rounded-2xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#0077AA]" />
-              What Happens Next?
-            </h3>
+          <div className="mt-6 bg-white border border-slate-200 rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-slate-900 mb-3">Timeline</h3>
             <div className="space-y-2 text-sm text-slate-600">
-              <p>• <strong>Review Period:</strong> January 13 - 28, 2026</p>
-              <p>• <strong>Decision Notification:</strong> January 28, 2026</p>
-              <p>• Check back here anytime to see status updates</p>
+              <p>• Review Period: January 13 – 28, 2026</p>
+              <p>• Decision Notification: January 28, 2026</p>
             </div>
           </div>
         )}
 
         {abstract.status === "under_review" && (
-          <div className="mt-6 bg-blue-50 rounded-2xl border border-blue-200 p-6">
-            <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-              <Eye className="w-5 h-5" />
-              Currently Under Review
-            </h3>
-            <p className="text-sm text-blue-800">
-              Your abstract is being evaluated by our review committee. 
-              You'll receive an email notification when a decision is made (by January 28, 2026).
+          <div className="mt-6 bg-white border border-slate-200 rounded-lg p-5">
+            <p className="text-sm text-slate-600">
+              Your abstract is being evaluated. You will receive an email when a decision is made.
             </p>
           </div>
         )}
 
         {abstract.status === "rejected" && (
-          <div className="mt-6 bg-white rounded-2xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-2">Thank You for Your Submission</h3>
+          <div className="mt-6 bg-white border border-slate-200 rounded-lg p-5">
             <p className="text-sm text-slate-600">
-              While your abstract wasn't selected for this year's forum, we encourage you to 
-              continue your research and consider submitting to future NEOMED Research Forums. 
-              We appreciate your contribution to advancing medical research.
+              Thank you for your submission. We encourage you to continue your research and consider submitting to future forums.
             </p>
           </div>
         )}
 
-        {/* Bookmark Reminder */}
-        <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-          <p className="text-sm text-amber-800">
-            <span className="font-semibold">📌 Bookmark this page</span> — This is your unique link to view your submission. Return anytime to check your status.
-          </p>
-        </div>
-
         {/* Footer */}
         <div className="mt-8 text-center">
-          <button
-            onClick={() => navigate("/")}
-            className="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors"
-          >
-            Return to Home
-          </button>
-          <p className="mt-4 text-sm text-slate-500">
+          <p className="text-xs text-slate-500">
             Questions? Contact{" "}
-            <a
-              href="mailto:sbadat@neomed.edu"
-              className="text-[#0077AA] hover:underline font-medium"
-            >
+            <a href="mailto:sbadat@neomed.edu" className="text-blue-600 hover:underline">
               sbadat@neomed.edu
             </a>
           </p>
         </div>
       </div>
 
-      {/* Response Modal */}
-      {showResponseModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            {responseType === "accept" ? (
-              <>
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <ThumbsUp className="w-8 h-8 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">
-                    Confirm Your Participation
-                  </h3>
-                  <p className="text-slate-600">
-                    You're accepting to present your abstract at NEOMED Research Forum 2026.
-                  </p>
-                </div>
-
-                {/* Showcase Option */}
-                <div className="bg-slate-50 rounded-xl p-4 mb-6">
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      id="showcase"
-                      checked={displayOnShowcase}
-                      onChange={(e) => setDisplayOnShowcase(e.target.checked)}
-                      className="mt-1 w-5 h-5 rounded border-slate-300 text-green-600 focus:ring-green-500"
-                    />
-                    <label htmlFor="showcase" className="cursor-pointer">
-                      <p className="font-medium text-slate-900">Display on Public Showcase</p>
-                      <p className="text-sm text-slate-500">
-                        Allow your abstract to be displayed on our website's Accepted Abstracts page
-                      </p>
-                    </label>
-                  </div>
-                </div>
-
-                {responseError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                    {responseError}
-                  </div>
-                )}
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowResponseModal(false)}
-                    className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors"
-                    disabled={submittingResponse}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleAuthorResponse}
-                    disabled={submittingResponse}
-                    className="flex-1 px-4 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {submittingResponse ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Confirming...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-5 h-5" />
-                        Confirm Participation
-                      </>
-                    )}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <ThumbsDown className="w-8 h-8 text-slate-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">
-                    Decline Presentation
-                  </h3>
-                  <p className="text-slate-600">
-                    Are you sure you want to decline your presentation spot? This action cannot be undone.
-                  </p>
-                </div>
-
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-                  <p className="text-sm text-amber-800">
-                    <strong>Note:</strong> By declining, you are giving up your presentation slot. 
-                    Your abstract will not be presented at the forum.
-                  </p>
-                </div>
-
-                {responseError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                    {responseError}
-                  </div>
-                )}
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowResponseModal(false)}
-                    className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors"
-                    disabled={submittingResponse}
-                  >
-                    Go Back
-                  </button>
-                  <button
-                    onClick={handleAuthorResponse}
-                    disabled={submittingResponse}
-                    className="flex-1 px-4 py-3 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {submittingResponse ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      "Yes, Decline"
-                    )}
-                  </button>
-                </div>
-              </>
+      {/* Decline Confirmation Modal */}
+      {showDeclineConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-sm w-full p-6">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              Decline Presentation?
+            </h3>
+            <p className="text-sm text-slate-600 mb-6">
+              Are you sure you want to decline? This will give up your presentation spot and cannot be undone.
+            </p>
+            
+            {responseError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {responseError}
+              </div>
             )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeclineConfirm(false)}
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                disabled={submittingResponse}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDecline}
+                disabled={submittingResponse}
+                className="flex-1 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                {submittingResponse ? "Processing..." : "Yes, Decline"}
+              </button>
+            </div>
           </div>
         </div>
       )}
