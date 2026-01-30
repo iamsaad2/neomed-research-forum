@@ -41,10 +41,9 @@ export default function Navbar({ mobileMenuOpen, setMobileMenuOpen }) {
             </div>
           </Link>
 
-          {/* Desktop Nav Links */}
+          {/* Desktop Nav Links - Submit Abstract removed */}
           <div className="hidden md:flex items-center space-x-6 ml-10">
             <LinkBtn to="/">Home</LinkBtn>
-            <LinkBtn to="/submit">Submit Abstract</LinkBtn>
             <LinkBtn to="/showcase">Accepted Abstracts</LinkBtn>
           </div>
 
@@ -62,13 +61,12 @@ export default function Navbar({ mobileMenuOpen, setMobileMenuOpen }) {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Submit Abstract removed */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-slate-200">
           <div className="px-4 py-3 space-y-2">
             {[
               ["/", "Home"],
-              ["/submit", "Submit Abstract"],
               ["/showcase", "Accepted Abstracts"],
             ].map(([to, label]) => (
               <Link
