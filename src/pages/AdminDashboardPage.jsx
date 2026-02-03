@@ -24,6 +24,10 @@ import {
   Unlock,
   Mail,
   Hourglass,
+  Edit3,
+  Plus,
+  X,
+  Save,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -51,6 +55,42 @@ export default function AdminDashboardPage() {
   const [abstractsPerReviewer, setAbstractsPerReviewer] = useState(18);
   const [isRandomizing, setIsRandomizing] = useState(false);
   const [assignmentResult, setAssignmentResult] = useState(null);
+
+  // Edit Abstract Modal State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAbstract, setEditingAbstract] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    primaryAuthor: { firstName: "", lastName: "", degree: "", email: "" },
+    additionalAuthors: [],
+    department: "",
+    departmentOther: "",
+    category: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  const degrees = ["BS", "BA", "MD", "DO", "PhD", "MD/PhD", "MS", "Other"];
+  const departments = [
+    { value: "cardiology", label: "Cardiology" },
+    { value: "neurology", label: "Neurology" },
+    { value: "oncology", label: "Oncology" },
+    { value: "pediatrics", label: "Pediatrics" },
+    { value: "internal", label: "Internal Medicine" },
+    { value: "surgery", label: "Surgery" },
+    { value: "psychiatry", label: "Psychiatry" },
+    { value: "radiology", label: "Radiology" },
+    { value: "pathology", label: "Pathology" },
+    { value: "emergency", label: "Emergency Medicine" },
+    { value: "anesthesiology", label: "Anesthesiology" },
+    { value: "dermatology", label: "Dermatology" },
+    { value: "other", label: "Other" },
+  ];
+  const categories = [
+    { value: "clinical", label: "Clinical Research" },
+    { value: "education", label: "Medical Education" },
+    { value: "basic", label: "Basic Science" },
+    { value: "public", label: "Public Health" },
+  ];
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -158,6 +198,111 @@ export default function AdminDashboardPage() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  // Edit Abstract Functions
+  const openEditModal = (abstract) => {
+    setEditingAbstract(abstract);
+    setEditFormData({
+      primaryAuthor: {
+        firstName: abstract.primaryAuthor?.firstName || "",
+        lastName: abstract.primaryAuthor?.lastName || "",
+        degree: abstract.primaryAuthor?.degree || "",
+        email: abstract.primaryAuthor?.email || "",
+      },
+      additionalAuthors: abstract.additionalAuthors || [],
+      department: abstract.department || "",
+      departmentOther: abstract.departmentOther || "",
+      category: abstract.category || "",
+    });
+    setEditError("");
+    setShowEditModal(true);
+  };
+
+  const closeEditModal = () => {
+    setShowEditModal(false);
+    setEditingAbstract(null);
+    setEditFormData({
+      primaryAuthor: { firstName: "", lastName: "", degree: "", email: "" },
+      additionalAuthors: [],
+      department: "",
+      departmentOther: "",
+      category: "",
+    });
+    setEditError("");
+  };
+
+  const handleEditSave = async () => {
+    setIsSaving(true);
+    setEditError("");
+
+    try {
+      const token = localStorage.getItem("adminToken");
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/admin/abstracts/${editingAbstract.id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editFormData),
+        }
+      );
+      const data = await res.json();
+
+      if (data.success) {
+        // Update local state
+        setAbstracts(
+          abstracts.map((a) =>
+            a.id === editingAbstract.id
+              ? {
+                  ...a,
+                  primaryAuthor: data.data.primaryAuthor,
+                  additionalAuthors: data.data.additionalAuthors,
+                  authors: data.data.authors,
+                  department: data.data.department,
+                  departmentOther: data.data.departmentOther,
+                  category: data.data.category,
+                }
+              : a
+          )
+        );
+        closeEditModal();
+      } else {
+        setEditError(data.message || "Failed to update abstract");
+      }
+    } catch (error) {
+      console.error("Error updating abstract:", error);
+      setEditError("Failed to update abstract. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const addAdditionalAuthor = () => {
+    setEditFormData({
+      ...editFormData,
+      additionalAuthors: [
+        ...editFormData.additionalAuthors,
+        { firstName: "", lastName: "", degree: "" },
+      ],
+    });
+  };
+
+  const removeAdditionalAuthor = (index) => {
+    setEditFormData({
+      ...editFormData,
+      additionalAuthors: editFormData.additionalAuthors.filter(
+        (_, i) => i !== index
+      ),
+    });
+  };
+
+  const updateAdditionalAuthor = (index, field, value) => {
+    const newAuthors = [...editFormData.additionalAuthors];
+    newAuthors[index] = { ...newAuthors[index], [field]: value };
+    setEditFormData({ ...editFormData, additionalAuthors: newAuthors });
   };
 
   const handleDeleteReviewer = async () => {
@@ -367,6 +512,16 @@ export default function AdminDashboardPage() {
         .map((k) => k.trim())
         .filter(Boolean);
     return [];
+  };
+
+  const getDepartmentLabel = (dept) => {
+    const found = departments.find((d) => d.value === dept);
+    return found ? found.label : dept;
+  };
+
+  const getCategoryLabel = (cat) => {
+    const found = categories.find((c) => c.value === cat);
+    return found ? found.label : cat;
   };
 
   const filteredAbstracts = abstracts
@@ -632,7 +787,18 @@ export default function AdminDashboardPage() {
                                 {abstract.authors}
                               </p>
                             </div>
-                            <div className="flex-shrink-0">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {/* Edit Button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEditModal(abstract);
+                                }}
+                                className="p-2 text-slate-500 hover:text-blue-400 hover:bg-slate-800 rounded-lg transition-colors"
+                                title="Edit abstract details"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
                               {isExpanded ? (
                                 <ChevronUp className="w-5 h-5 text-slate-600" />
                               ) : (
@@ -645,9 +811,30 @@ export default function AdminDashboardPage() {
                           <div className="px-4 pb-4 border-t border-slate-800 bg-slate-800/20">
                             <div className="pt-4 grid lg:grid-cols-2 gap-6">
                               <div>
-                                <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-3">
-                                  Abstract
-                                </h4>
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                                    Abstract
+                                  </h4>
+                                  <button
+                                    onClick={() => openEditModal(abstract)}
+                                    className="flex items-center gap-1 px-2 py-1 text-xs text-blue-400 hover:bg-blue-500/10 rounded transition-colors"
+                                  >
+                                    <Edit3 className="w-3 h-3" />
+                                    Edit Details
+                                  </button>
+                                </div>
+                                
+                                {/* Department & Category Info */}
+                                <div className="mb-4 flex flex-wrap gap-2">
+                                  <span className="px-2 py-1 bg-slate-700 text-slate-300 text-xs rounded">
+                                    {getDepartmentLabel(abstract.department)}
+                                    {abstract.departmentOther && `: ${abstract.departmentOther}`}
+                                  </span>
+                                  <span className="px-2 py-1 bg-slate-700 text-slate-300 text-xs rounded">
+                                    {getCategoryLabel(abstract.category)}
+                                  </span>
+                                </div>
+
                                 {abstract.abstractContent ? (
                                   <div className="space-y-3 text-sm text-slate-300">
                                     {[
@@ -1047,6 +1234,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
+      {/* Delete Reviewer Modal */}
       {showDeleteModal && reviewerToDelete && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6">
@@ -1098,6 +1286,7 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
+      {/* Assignment Modal */}
       {showAssignmentModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-6">
@@ -1256,6 +1445,290 @@ export default function AdminDashboardPage() {
                   <>
                     <Shuffle className="w-4 h-4" />
                     Assign Randomly
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Abstract Modal */}
+      {showEditModal && editingAbstract && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-2xl w-full p-6 my-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                  <Edit3 className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-white font-medium">Edit Abstract Details</h3>
+                  <p className="text-sm text-slate-500 line-clamp-1">
+                    {editingAbstract.title}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={closeEditModal}
+                className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {editError && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                {editError}
+              </div>
+            )}
+
+            <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+              {/* Primary Author Section */}
+              <div>
+                <h4 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-blue-500 text-white rounded-full text-xs flex items-center justify-center">
+                    1
+                  </span>
+                  Primary Author
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">First Name</label>
+                    <input
+                      type="text"
+                      value={editFormData.primaryAuthor.firstName}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          primaryAuthor: {
+                            ...editFormData.primaryAuthor,
+                            firstName: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Last Name</label>
+                    <input
+                      type="text"
+                      value={editFormData.primaryAuthor.lastName}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          primaryAuthor: {
+                            ...editFormData.primaryAuthor,
+                            lastName: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Degree</label>
+                    <select
+                      value={editFormData.primaryAuthor.degree}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          primaryAuthor: {
+                            ...editFormData.primaryAuthor,
+                            degree: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="">Select</option>
+                      {degrees.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={editFormData.primaryAuthor.email}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          primaryAuthor: {
+                            ...editFormData.primaryAuthor,
+                            email: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Authors Section */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium text-slate-300">Additional Authors</h4>
+                  <button
+                    type="button"
+                    onClick={addAdditionalAuthor}
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add Author
+                  </button>
+                </div>
+                {editFormData.additionalAuthors.length === 0 ? (
+                  <p className="text-sm text-slate-500 italic">No additional authors</p>
+                ) : (
+                  <div className="space-y-3">
+                    {editFormData.additionalAuthors.map((author, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-slate-900/50 border border-slate-700 rounded-lg p-3"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-slate-500">Author {idx + 2}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeAdditionalAuthor(idx)}
+                            className="p-1 text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <input
+                            type="text"
+                            value={author.firstName}
+                            onChange={(e) =>
+                              updateAdditionalAuthor(idx, "firstName", e.target.value)
+                            }
+                            placeholder="First name"
+                            className="px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                          />
+                          <input
+                            type="text"
+                            value={author.lastName}
+                            onChange={(e) =>
+                              updateAdditionalAuthor(idx, "lastName", e.target.value)
+                            }
+                            placeholder="Last name"
+                            className="px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                          />
+                          <select
+                            value={author.degree}
+                            onChange={(e) =>
+                              updateAdditionalAuthor(idx, "degree", e.target.value)
+                            }
+                            className="px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Degree</option>
+                            {degrees.map((d) => (
+                              <option key={d} value={d}>
+                                {d}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Department & Category Section */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Department</label>
+                  <select
+                    value={editFormData.department}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        department: e.target.value,
+                        departmentOther:
+                          e.target.value !== "other" ? "" : editFormData.departmentOther,
+                      })
+                    }
+                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((d) => (
+                      <option key={d.value} value={d.value}>
+                        {d.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Category</label>
+                  <select
+                    value={editFormData.category}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, category: e.target.value })
+                    }
+                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Other Department Field */}
+              {editFormData.department === "other" && (
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">
+                    Specify Department
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.departmentOther}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        departmentOther: e.target.value,
+                      })
+                    }
+                    placeholder="Enter department name"
+                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-6 pt-4 border-t border-slate-700">
+              <button
+                onClick={closeEditModal}
+                className="flex-1 px-4 py-2.5 bg-slate-700 text-white text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                disabled={isSaving}
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Changes
                   </>
                 )}
               </button>
