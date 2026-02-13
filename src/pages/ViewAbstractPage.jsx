@@ -369,7 +369,7 @@ export default function ViewAbstractPage() {
                   <div className="mt-3 p-4 bg-slate-50 border border-slate-200 rounded-lg">
                     <p className="text-sm font-medium text-slate-900 mb-2">Presentation Guidelines</p>
                     <ul className="text-sm text-slate-700 space-y-1">
-                      <li>• Presentations should be approximately 5 minutes in length</li>
+                      <li>• Presentations should be <b>MAXIMUM</b> 5 minutes in length</li>
                       <li>• Please limit your presentation to 7 slides or fewer</li>
                     </ul>
                   </div>
