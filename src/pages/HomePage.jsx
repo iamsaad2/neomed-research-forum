@@ -116,21 +116,21 @@ export default function HomePage() {
                 title: "Acceptance Notification", 
                 description: "Authors notified of their submission status",
                 icon: Award,
-                status: "current"
+                status: "complete"
               },
               { 
                 date: "February 21, 2026", 
                 title: "Final Presentation Due", 
                 description: "Accepted presenters submit final slides",
                 icon: Users,
-                status: "upcoming"
+                status: "complete"
               },
               { 
                 date: "February 25, 2026", 
                 title: "Research Forum Day", 
                 description: "Full-day research forum and presentations at 4:00 PM",
                 icon: Award,
-                status: "upcoming"
+                status: "current"
               },
             ].map((item, idx) => (
               <div 
