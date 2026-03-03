@@ -28,7 +28,9 @@ import {
   Plus,
   X,
   Save,
+  Trophy,
 } from "lucide-react";
+import WinnersAdminTab from "../components/WinnersAdminTab";
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -651,6 +653,7 @@ export default function AdminDashboardPage() {
           ))}
         </div>
 
+        {/* ===== TABS - Winners tab added here ===== */}
         <div className="flex gap-1 mb-6">
           {[
             {
@@ -665,6 +668,12 @@ export default function AdminDashboardPage() {
               count: reviewers.length,
               icon: Users,
             },
+            {
+              id: "winners",
+              label: "Winners",
+              count: null,
+              icon: Trophy,
+            },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -677,15 +686,17 @@ export default function AdminDashboardPage() {
             >
               <tab.icon className="w-4 h-4" />
               {tab.label}
-              <span
-                className={`px-1.5 py-0.5 rounded text-xs ${
-                  activeTab === tab.id
-                    ? "bg-slate-700 text-slate-300"
-                    : "bg-slate-800 text-slate-500"
-                }`}
-              >
-                {tab.count}
-              </span>
+              {tab.count !== null && (
+                <span
+                  className={`px-1.5 py-0.5 rounded text-xs ${
+                    activeTab === tab.id
+                      ? "bg-slate-700 text-slate-300"
+                      : "bg-slate-800 text-slate-500"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -1231,6 +1242,9 @@ export default function AdminDashboardPage() {
               )}
             </>
           )}
+
+          {/* ===== WINNERS TAB CONTENT ===== */}
+          {activeTab === "winners" && <WinnersAdminTab />}
         </div>
       </div>
 
