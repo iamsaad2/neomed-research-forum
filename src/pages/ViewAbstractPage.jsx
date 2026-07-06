@@ -14,11 +14,13 @@ import {
   Lock,
 } from "lucide-react";
 import { abstractAPI } from "../services/api";
+import { useSettings, eventTitle } from "../context/SettingsContext";
 
 // Microsoft Form URL for PowerPoint submission - UPDATE THIS WITH YOUR ACTUAL FORM URL
 const POWERPOINT_FORM_URL = "https://forms.office.com/Pages/ResponsePage.aspx?id=VlbRrg7Hk0imjBM_xg7fNqrAjdKdTspBoH-ttwTLR8ZUNVg2OVJKUzREODFHOE5JWkQ5QjNSSlpBUy4u";
 
 export default function ViewAbstractPage() {
+  const { settings } = useSettings();
   const { token } = useParams();
   const navigate = useNavigate();
   const [abstract, setAbstract] = useState(null);
@@ -218,7 +220,7 @@ export default function ViewAbstractPage() {
   };
 
   const formatDeadline = (date) => {
-    if (!date) return "Thursday, February 5, 2026";
+    if (!date) return settings.confirmDeadlineDisplay;
     return new Date(date).toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
@@ -282,7 +284,7 @@ export default function ViewAbstractPage() {
                 Your abstract has been accepted
               </h2>
               <p className="text-sm text-red-600 font-semibold mt-1">
-                Please confirm your participation by Friday, February 6, 2026 at 11:59 PM
+                Please confirm your participation by {settings.confirmByText}
               </p>
             </div>
             
@@ -362,7 +364,7 @@ export default function ViewAbstractPage() {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-slate-900">Submit Presentation Slides</p>
                   <p className="text-sm text-red-600 font-semibold mt-1">
-                    Due: Saturday, February 21, 2026 at 11:59 PM
+                    Due: {settings.presentationDueText}
                   </p>
                   
                   {/* Presentation Guidelines */}
@@ -432,7 +434,7 @@ export default function ViewAbstractPage() {
         {hasDeclined && (
           <div className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
             <p className="text-sm text-slate-600">
-              You have declined the presentation spot. Thank you for your submission to NEOMED Research Forum 2026.
+              You have declined the presentation spot. Thank you for your submission to NEOMED {eventTitle(settings)}.
             </p>
           </div>
         )}
@@ -525,8 +527,8 @@ export default function ViewAbstractPage() {
           <div className="mt-6 bg-white border border-slate-200 rounded-lg p-5">
             <h3 className="text-sm font-semibold text-slate-900 mb-3">Timeline</h3>
             <div className="space-y-2 text-sm text-slate-600">
-              <p>• Review Period: January 13 – 28, 2026</p>
-              <p>• Decision Notification: January 28, 2026</p>
+              <p>• Review Period: {settings.reviewPeriodText}</p>
+              <p>• Decision Notification: {settings.decisionNotificationText}</p>
             </div>
           </div>
         )}
@@ -551,8 +553,8 @@ export default function ViewAbstractPage() {
         <div className="mt-8 text-center">
           <p className="text-xs text-slate-500">
             Questions? Contact{" "}
-            <a href="mailto:sbadat@neomed.edu" className="text-blue-600 hover:underline">
-              sbadat@neomed.edu
+            <a href={`mailto:${settings.contactEmail}`} className="text-blue-600 hover:underline">
+              {settings.contactEmail}
             </a>
           </p>
         </div>

@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Mail, AlertCircle, ArrowRight, Shield } from "lucide-react";
+import { useSettings, eventTitle } from "../context/SettingsContext";
 
 export default function AdminLoginPage() {
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
@@ -71,7 +73,7 @@ export default function AdminLoginPage() {
             Admin Portal
           </h1>
           <p className="text-xl text-slate-400 leading-relaxed mb-12 max-w-md">
-            Manage abstracts, reviewers, and forum settings for NEOMED Research Forum 2026
+            Manage abstracts, reviewers, and forum settings for NEOMED {eventTitle(settings)}
           </p>
 
           <div className="space-y-6">

@@ -253,6 +253,60 @@ export const adminAPI = {
   },
 };
 
+// Site Settings APIs
+export const settingsAPI = {
+  // Get site settings (public)
+  get: async () => {
+    const response = await fetch(`${API_URL}/api/settings`);
+    return handleResponse(response);
+  },
+
+  // Update site settings (admin)
+  update: async (token, settings) => {
+    const response = await fetch(`${API_URL}/api/admin/settings`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(settings),
+    });
+    return handleResponse(response);
+  },
+
+  // Upload a recap photo (admin) — expects a File object
+  uploadRecapPhoto: async (token, file, caption = "") => {
+    const formData = new FormData();
+    formData.append("photo", file);
+    formData.append("caption", caption);
+    const response = await fetch(
+      `${API_URL}/api/admin/settings/recap-photo`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      }
+    );
+    return handleResponse(response);
+  },
+
+  // Delete a recap photo (admin) — pass publicId for Cloudinary photos, else url
+  deleteRecapPhoto: async (token, { publicId, url }) => {
+    const response = await fetch(
+      `${API_URL}/api/admin/settings/recap-photo`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ publicId, url }),
+      }
+    );
+    return handleResponse(response);
+  },
+};
+
 // Test backend connection
 export const testConnection = async () => {
   try {
@@ -271,5 +325,6 @@ export default {
   abstractAPI,
   reviewerAPI,
   adminAPI,
+  settingsAPI,
   testConnection,
 };

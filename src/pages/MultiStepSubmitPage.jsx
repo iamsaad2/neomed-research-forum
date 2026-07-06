@@ -2,14 +2,12 @@ import { useState } from "react";
 import { FileText, ChevronRight, ChevronLeft, Upload, CheckCircle, X, Plus, Trash2, XCircle, Calendar, Mail } from "lucide-react";
 import { abstractAPI } from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
-
-// ==========================================
-// SUBMISSION STATUS FLAG - Easy to toggle
-// Set to false to reopen submissions
-// ==========================================
-const SUBMISSIONS_CLOSED = false;
+import { useSettings, eventTitle } from "../context/SettingsContext";
 
 export default function MultiStepSubmitPage() {
+  const { settings } = useSettings();
+  // Toggle this in the admin dashboard's Settings tab ("Submissions open").
+  const SUBMISSIONS_CLOSED = !settings.submissionsOpen;
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   
@@ -80,8 +78,8 @@ export default function MultiStepSubmitPage() {
             <div className="p-8">
               <div className="text-center mb-8">
                 <p className="text-lg text-slate-700 mb-4">
-                  The abstract submission period for NEOMED Research Forum 2026 ended on{" "}
-                  <span className="font-semibold text-red-700">January 12, 2026 at 11:59 PM EST</span>.
+                  The abstract submission period for NEOMED {eventTitle(settings)} ended on{" "}
+                  <span className="font-semibold text-red-700">{settings.submissionDeadlineText}</span>.
                 </p>
                 <p className="text-slate-600">
                   Thank you to everyone who submitted their research abstracts. The review committee
@@ -100,28 +98,28 @@ export default function MultiStepSubmitPage() {
                     <div className="w-2 h-2 bg-amber-500 rounded-full mt-2"></div>
                     <div>
                       <p className="font-medium text-slate-900">Review Period</p>
-                      <p className="text-sm text-slate-600">January 13 - 28, 2026</p>
+                      <p className="text-sm text-slate-600">{settings.reviewPeriodText}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 bg-slate-300 rounded-full mt-2"></div>
                     <div>
                       <p className="font-medium text-slate-900">Acceptance Notifications</p>
-                      <p className="text-sm text-slate-600">January 28, 2026</p>
+                      <p className="text-sm text-slate-600">{settings.decisionNotificationText}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 bg-slate-300 rounded-full mt-2"></div>
                     <div>
                       <p className="font-medium text-slate-900">Final Slides Due</p>
-                      <p className="text-sm text-slate-600">February 18, 2026</p>
+                      <p className="text-sm text-slate-600">{settings.presentationDueText}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 bg-slate-300 rounded-full mt-2"></div>
                     <div>
                       <p className="font-medium text-slate-900">Research Forum Day</p>
-                      <p className="text-sm text-slate-600">February 25, 2026</p>
+                      <p className="text-sm text-slate-600">{settings.eventDate}</p>
                     </div>
                   </div>
                 </div>
@@ -141,11 +139,11 @@ export default function MultiStepSubmitPage() {
                   Questions? Contact the Research Forum Committee:
                 </p>
                 <a
-                  href="mailto:sbadat@neomed.edu"
+                  href={`mailto:${settings.contactEmail}`}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-[#0099CC] text-white rounded-lg hover:bg-[#0077AA] transition-colors"
                 >
                   <Mail className="w-4 h-4" />
-                  sbadat@neomed.edu
+                  {settings.contactEmail}
                 </a>
               </div>
             </div>
@@ -1150,8 +1148,8 @@ export default function MultiStepSubmitPage() {
 
         <div className="mt-6 text-center text-sm text-slate-600">
           Need help? Contact us at{" "}
-          <a href="mailto:sbadat@neomed.edu" className="text-[#0099CC] hover:text-[#0077AA]">
-            sbadat@neomed.edu
+          <a href={`mailto:${settings.contactEmail}`} className="text-[#0099CC] hover:text-[#0077AA]">
+            {settings.contactEmail}
           </a>
         </div>
       </div>

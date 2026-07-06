@@ -10,8 +10,10 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { useSettings, eventTitle } from "../context/SettingsContext";
 
 export default function ReviewerDashboardPage() {
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const [abstracts, setAbstracts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -381,7 +383,7 @@ export default function ReviewerDashboardPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-1">Your Contribution</h3>
                 <p className="text-white/80 text-sm">
-                  You've completed {reviewedCount} review{reviewedCount !== 1 ? "s" : ""}. Thank you for helping evaluate submissions for NEOMED Research Forum 2026!
+                  You've completed {reviewedCount} review{reviewedCount !== 1 ? "s" : ""}. Thank you for helping evaluate submissions for NEOMED {eventTitle(settings)}!
                 </p>
               </div>
               <div className="text-right">

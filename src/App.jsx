@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { useState } from "react";
+import { SettingsProvider } from "./context/SettingsContext";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import MultiStepSubmitPage from "./pages/MultiStepSubmitPage";
@@ -50,8 +51,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <SettingsProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </SettingsProvider>
   );
 }

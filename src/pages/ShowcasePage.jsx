@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Award, Search, ChevronRight, AlertCircle, X } from "lucide-react";
 import { abstractAPI } from "../services/api";
+import { useSettings, eventTitle } from "../context/SettingsContext";
 
 export default function ShowcasePage() {
+  const { settings } = useSettings();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [abstracts, setAbstracts] = useState([]);
@@ -159,7 +161,7 @@ export default function ShowcasePage() {
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-4">Research Showcase</h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Explore research accepted for presentation at NEOMED Research Forum 2026
+            Explore research accepted for presentation at NEOMED {eventTitle(settings)}
           </p>
         </div>
 

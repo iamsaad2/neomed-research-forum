@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CheckCircle, Copy, Check, ExternalLink, Calendar, ArrowRight } from "lucide-react";
+import { useSettings, eventTitle } from "../context/SettingsContext";
 
 export default function ThankYouPage() {
+  const { settings } = useSettings();
   const { token } = useParams();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
@@ -35,7 +37,7 @@ export default function ThankYouPage() {
             Submission Received!
           </h1>
           <p className="text-lg text-slate-600">
-            Thank you for submitting to NEOMED Research Forum 2026
+            Thank you for submitting to NEOMED {eventTitle(settings)}
           </p>
         </div>
 
@@ -156,8 +158,8 @@ export default function ThankYouPage() {
         {/* Contact */}
         <p className="mt-8 text-center text-sm text-slate-500">
           Questions? Contact us at{" "}
-          <a href="mailto:sbadat@neomed.edu" className="text-[#0077AA] hover:underline font-medium">
-            sbadat@neomed.edu
+          <a href={`mailto:${settings.contactEmail}`} className="text-[#0077AA] hover:underline font-medium">
+            {settings.contactEmail}
           </a>
         </p>
       </div>

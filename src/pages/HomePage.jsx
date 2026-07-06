@@ -11,20 +11,15 @@ import {
   X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const RECAP_PHOTOS = [
-  { src: "/recap/recap-1.jpg", caption: "" },
-  { src: "/recap/recap-2.jpg", caption: "" },
-  { src: "/recap/recap-3.jpg", caption: "" },
-  { src: "/recap/recap-4.jpg", caption: "" },
-  { src: "/recap/recap-5.jpg", caption: "" },
-  { src: "/recap/recap-6.jpg", caption: "" },
-  { src: "/recap/recap-7.jpg", caption: "" },
-  { src: "/recap/recap-8.jpg", caption: "" },
-  { src: "/recap/recap-9.jpg", caption: "" },
-];
+import { useSettings, eventTitle } from "../context/SettingsContext";
 
 export default function HomePage() {
+  const { settings } = useSettings();
+  // Normalize recap photos to the shape this page expects ({ src, caption }).
+  const RECAP_PHOTOS = (settings.recapPhotos || []).map((p) => ({
+    src: p.url,
+    caption: p.caption || "",
+  }));
   const [winners, setWinners] = useState([]);
   const [winnersLoading, setWinnersLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState(null);
@@ -154,12 +149,15 @@ export default function HomePage() {
         {/* ============================================ */}
         <div className="pt-8 pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Research Forum 2026</h1>
-            <p className="text-sm text-slate-500 mt-1">Northeast Ohio Medical University</p>
+            <h1 className="text-3xl font-bold text-slate-900">{eventTitle(settings)}</h1>
+            <p className="text-sm text-slate-500 mt-1">{settings.university}</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <Calendar className="w-4 h-4 text-[#0077AA]" />
-            <span>February 25, 2026 · 4:00 PM</span>
+            <span>
+              {settings.eventDate}
+              {settings.eventTime ? ` · ${settings.eventTime}` : ""}
+            </span>
           </div>
         </div>
 
@@ -285,13 +283,17 @@ export default function HomePage() {
             <h2 className="text-xl font-bold text-slate-900">Key Dates</h2>
           </div>
           <div className="space-y-3">
-            {[
-              { date: "Dec 15, 2025", title: "Submissions Open", icon: Calendar, status: "complete" },
-              { date: "Jan 12, 2026", title: "Submission Deadline", icon: Clock, status: "complete" },
-              { date: "Jan 28, 2026", title: "Acceptance Notification", icon: Award, status: "complete" },
-              { date: "Feb 21, 2026", title: "Final Presentation Due", icon: Users, status: "complete" },
-              { date: "Feb 25, 2026", title: "Research Forum Day", icon: Award, status: "current" },
-            ].map((item, idx) => (
+            {(settings.keyDates || []).map((item, idx) => {
+              // Choose an icon from the title/status (icons can't be stored in the DB).
+              const t = (item.title || "").toLowerCase();
+              const Icon = t.includes("deadline") || t.includes("due")
+                ? Clock
+                : t.includes("notification") || t.includes("acceptance") || item.status === "current"
+                ? Award
+                : t.includes("presentation")
+                ? Users
+                : Calendar;
+              return (
               <div
                 key={idx}
                 className={`rounded-lg px-4 py-3 flex items-center gap-4 ${
@@ -303,14 +305,15 @@ export default function HomePage() {
                 <div className={`flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center ${
                   item.status === "current" ? "bg-[#0077AA] text-white" : "bg-slate-200 text-slate-400"
                 }`}>
-                  <item.icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 flex items-center justify-between gap-4">
                   <span className={`font-semibold text-sm ${item.status === "current" ? "text-[#0077AA]" : "text-slate-600"}`}>{item.title}</span>
                   <span className={`text-sm flex-shrink-0 ${item.status === "current" ? "text-[#0077AA]" : "text-slate-400"}`}>{item.date}</span>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -320,7 +323,7 @@ export default function HomePage() {
         <div className="py-12 border-t border-slate-100 text-center">
           <h3 className="text-xl font-bold text-slate-900 mb-2">Explore the Research</h3>
           <p className="text-slate-500 text-sm mb-6 max-w-md mx-auto">
-            Browse all accepted abstracts from NEOMED's Research Forum 2026.
+            Browse all accepted abstracts from NEOMED's {eventTitle(settings)}.
           </p>
           <Link
             to="/showcase"

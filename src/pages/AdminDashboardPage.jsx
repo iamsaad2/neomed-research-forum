@@ -31,6 +31,7 @@ import {
   Trophy,
 } from "lucide-react";
 import WinnersAdminTab from "../components/WinnersAdminTab";
+import SettingsAdminTab from "../components/SettingsAdminTab";
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -674,6 +675,12 @@ export default function AdminDashboardPage() {
               count: null,
               icon: Trophy,
             },
+            {
+              id: "settings",
+              label: "Settings",
+              count: null,
+              icon: Settings,
+            },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1245,6 +1252,8 @@ export default function AdminDashboardPage() {
 
           {/* ===== WINNERS TAB CONTENT ===== */}
           {activeTab === "winners" && <WinnersAdminTab />}
+
+          {activeTab === "settings" && <SettingsAdminTab />}
         </div>
       </div>
 

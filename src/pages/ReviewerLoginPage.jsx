@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Mail, User, AlertCircle, ArrowRight } from "lucide-react";
+import { useSettings } from "../context/SettingsContext";
 
 export default function ReviewerLoginPage() {
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -55,7 +57,7 @@ export default function ReviewerLoginPage() {
             Reviewer Portal
           </h1>
           <p className="text-xl text-white/80 leading-relaxed mb-12">
-            Review abstracts here for the 2026 Neomed Research Forum
+            Review abstracts here for the {settings.year} Neomed {settings.eventName}
           </p>
 
           <div className="space-y-6">

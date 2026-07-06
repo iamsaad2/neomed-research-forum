@@ -1,8 +1,10 @@
 import { Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useSettings, eventTitle } from "../context/SettingsContext";
 
 export default function Navbar({ mobileMenuOpen, setMobileMenuOpen }) {
   const location = useLocation();
+  const { settings } = useSettings();
 
   const LinkBtn = ({ to, children }) => {
     const isActive = location.pathname === to;
@@ -37,7 +39,7 @@ export default function Navbar({ mobileMenuOpen, setMobileMenuOpen }) {
             />
             <div>
               <div className="text-xl font-bold text-slate-900">NEOMED</div>
-              <div className="text-xs text-slate-600 -mt-1">Research Forum 2026</div>
+              <div className="text-xs text-slate-600 -mt-1">{eventTitle(settings)}</div>
             </div>
           </Link>
 
